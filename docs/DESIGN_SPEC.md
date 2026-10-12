@@ -5,10 +5,8 @@
 This file is the source of truth for the app build and for the remaining Figma screens.
 Figma file: https://www.figma.com/design/BOiZOAtr1JNzelDQjUddsC (fileKey `BOiZOAtr1JNzelDQjUddsC`)
 
-Rendered references (2x PNGs):
-- `design/exports/01-freezer-home@2x.png`
-- `design/exports/02-item-cooling@2x.png`
-- `design/exports/03-thawed-decision@2x.png`
+Rendered references — 2x PNGs of every Figma screen in `design/exports/` (match these closely):
+`01-freezer-home`, `02-item-cooling`, `03-thawed-decision`, `04-let-go`, `05-saved`, `06-insights`, `07-you`, `08-onboarding-1`, `09-onboarding-2`, `10-onboarding-3`, `11-freeze-sheet`, `12-frozen-solid`, `13-freezer-empty`, `14-lock-screen` (each `@2x.png`).
 
 Figma node ids (read-only references):
 
@@ -64,12 +62,25 @@ Tokens live in `src/theme/tokens.ts`; never hard-code a hex value outside it. Fo
 - Inputs use `radius.md` (20).
 - Buttons and chips use `radius.full`.
 
-**Background glows**
-- Most screens have 1–2 large blurred ellipses behind the content (e.g. lavender100 top-right, ice200 top-left), 280–420px wide, at 0.8–1 opacity, blurred heavily.
-- In RN, use a `LinearGradient` wash, or an absolutely positioned `View` with a big radius and low opacity. A blur is optional on native.
+**Background glows** (art-directed by Anushka in Figma — follow exactly)
+- **Plain canvas, no glows:** Freezer home, Empty freezer, Insights, You.
+- **Everything else uses one wide, very soft top glow:** an ellipse 528 × 358 at x −67, y −118 (it spills past both screen edges), solid accent at 100%, layer blur 200. Web/CSS: `filter: blur(100px)` on that ellipse. Native: a radial gradient from the accent to transparent covering the top ~360pt.
+- Some screens add one **primary glow** behind the hero object:
+
+| Screen | Top glow | Primary glow / backdrop |
+|---|---|---|
+| Item cooling | lavender100 | ice backdrop gradient #CDEBFF → #EAF6FF → cream over the top 470pt |
+| Thawed | butter100 | mint100, 420 × 380 at (−20, 90), blur 60 |
+| Let-go | butter100 | mint500, 300 × 260 at (46, 300), blur 300 (very diffuse), over the mint100 → cream frame gradient |
+| Saved | mint100 | lavender100, 473 × 344 at (−40, 106), blur 80 |
+| Onboarding 1 | lavender100 | ice200, 420 × 380 at (−40, 60), blur 70 |
+| Onboarding 2 | ice200 | lavender100, same geometry |
+| Onboarding 3 | butter100 | mint100, same geometry |
+| Frozen solid | lavender100 | frame gradient ice200 → ice50 → cream, plus an ice400 glow under the cube (260 × 120 at 66, 440, blur 60) |
 
 **Status bar:** dark content.
-**Home indicator:** system.
+
+**No home indicator.** Never draw one in the UI; the designs intentionally have none. Bottom-anchored elements (tab bar, sticky CTAs, onboarding buttons) sit **24pt above the screen's bottom edge**. Do not add the 34pt safe-area inset on top of that; 24pt already clears the system indicator.
 
 ### Motion tokens
 | Name | Use | Values |
@@ -173,7 +184,7 @@ Geometry, on a 200 × 200 box scaled by `size / 200`, with the ground line at y 
 - White, 2.5px mint border, r28, padding 12, `raised`.
 - 76 × 76 mint100 stage with the thawed cube; name (Title/S) and "$65 · thawed 2h ago" (Body/S plum500); a small plum "Decide" button (padding 16/12, Label/M).
 
-**TabBar** — floating, 353 × 76, 20 above the bottom safe-area inset.
+**TabBar** — floating, 353 × 76, its bottom edge 24pt above the screen bottom (no extra safe-area inset).
 - White at 0.92, backdrop blur 20, `raised`, pill-shaped, horizontal padding 20.
 - Tabs: Freezer (snowflake), Saved (coins), [FAB], Insights (chart), You (user).
 - Each tab is a 24 icon over a Caption label. Active tabs are plum; inactive ones are plum300.
@@ -253,7 +264,7 @@ Background: lavender100 glow top-right and ice200 glow top-left.
   - A centred frozen Cube with the bag glyph.
   - "Your freezer is empty" (Title/L) / "Next time something tempts you, freeze it here first." (Body/M).
   - Primary button "Freeze something" → `/freeze`.
-- The bottom 170pt has a cream fade gradient under the tab bar. Content scrolls under the tab bar, with bottom padding 140.
+- The bottom 170pt has a cream fade gradient under the tab bar, anchored to the screen bottom. Content scrolls under the tab bar, with bottom padding 130.
 - Live updates: re-render every 30s, or every second when any item has less than 1 hour left.
 
 ### 4.3 Freeze sheet (`app/freeze.tsx`)
