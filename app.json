@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Chill",
+    "slug": "chill",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "chill",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFF4EC",
+    "ios": {
+      "bundleIdentifier": "com.chill.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.chill.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF4EC",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "backgroundColor": "#FFF4EC"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFF4EC",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4FA9E6"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Chill uses your photos so you can add a picture of the thing you're putting on ice.",
+          "cameraPermission": "Chill uses your camera so you can snap a photo of the thing you're putting on ice.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    }
+  }
+}
