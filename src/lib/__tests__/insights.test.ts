@@ -8,6 +8,7 @@ import {
   byWeekday,
   decisionsNewestFirst,
   formatHour,
+  impulseTime,
   keepRate,
   letGoStreak,
   longestLetGoStreak,
@@ -331,6 +332,33 @@ describe('peakImpulseWindow', () => {
     const expected = { weekday: 1, hour: 7, count: 2 };
     expect(peakImpulseWindow(items)).toEqual(expected);
     expect(peakImpulseWindow([...items].reverse())).toEqual(expected);
+  });
+});
+
+describe('firstFrozenAt (refrozen items)', () => {
+  // Refrozen on Wednesday 10:00, but the impulse struck on Sunday 23:00.
+  const refrozen = () =>
+    makeItem({ firstFrozenAt: at(SUN, 23, 15), frozenAt: at(WED + 7, 10), refreezeCount: 1 });
+
+  it('impulseTime prefers firstFrozenAt and falls back to frozenAt', () => {
+    expect(impulseTime(refrozen())).toBe(at(SUN, 23, 15));
+    expect(impulseTime(makeItem({ frozenAt: at(TUE, 8) }))).toBe(at(TUE, 8));
+    expect(impulseTime(makeItem({ frozenAt: at(TUE, 8), firstFrozenAt: NaN }))).toBe(at(TUE, 8));
+  });
+
+  it('byHourOfDay counts a refrozen item at its first freeze', () => {
+    const buckets = byHourOfDay([refrozen()]);
+    expect(buckets[23]).toBe(1);
+    expect(buckets[10]).toBe(0);
+  });
+
+  it('byWeekday counts a refrozen item at its first freeze', () => {
+    expect(byWeekday([refrozen()])).toEqual([0, 0, 0, 0, 0, 0, 1]);
+  });
+
+  it('peakImpulseWindow uses the first freeze', () => {
+    const items = [refrozen(), makeItem({ frozenAt: at(SUN + 7, 23, 40) }), makeItem({ frozenAt: at(WED, 10) })];
+    expect(peakImpulseWindow(items)).toEqual({ weekday: 6, hour: 23, count: 2 });
   });
 });
 

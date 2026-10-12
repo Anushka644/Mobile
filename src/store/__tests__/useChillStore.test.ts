@@ -77,6 +77,7 @@ describe('freeze', () => {
       category: 'fashion',
       mood: 'hyped',
       frozenAt: NOW,
+      firstFrozenAt: NOW,
       thawAt: NOW + 72 * HOUR,
       cooldown: '72h',
       refreezeCount: 0,
@@ -197,6 +198,23 @@ describe('refreeze', () => {
     const before = store().items;
     expect(store().refreeze('nope', '24h', NOW)).toBeUndefined();
     expect(store().items).toBe(before);
+  });
+
+  it('preserves firstFrozenAt across refreezes', () => {
+    const item = store().freeze({ ...sneakers, cooldown: '24h' }, NOW);
+    const once = store().refreeze(item.id, undefined, NOW + 30 * HOUR)!;
+    const twice = store().refreeze(item.id, undefined, NOW + 60 * HOUR)!;
+    expect(once.firstFrozenAt).toBe(NOW);
+    expect(twice.firstFrozenAt).toBe(NOW);
+    expect(twice.frozenAt).toBe(NOW + 60 * HOUR);
+  });
+
+  it('backfills firstFrozenAt from frozenAt for items stored without it', () => {
+    const item = store().freeze({ ...sneakers, cooldown: '24h' }, NOW);
+    useChillStore.setState({ items: [{ ...item, firstFrozenAt: undefined }] });
+    const updated = store().refreeze(item.id, undefined, NOW + 30 * HOUR)!;
+    expect(updated.firstFrozenAt).toBe(NOW);
+    expect(updated.frozenAt).toBe(NOW + 30 * HOUR);
   });
 });
 
@@ -387,9 +405,54 @@ describe('resetAll', () => {
     store().updateSettings({ currency: 'EUR', notificationsEnabled: true });
     store().setGoal({ name: 'Trip', targetCents: 1000 });
     store().completeOnboarding();
+    store().fastForward(24 * HOUR);
     store().resetAll();
     expect(store().items).toEqual([]);
     expect(store().settings).toEqual(DEFAULT_SETTINGS);
+    expect(store().settings.timeOffsetMs).toBeUndefined();
+  });
+});
+
+describe('fastForward', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('accumulates a persisted time offset', async () => {
+    store().fastForward(24 * HOUR);
+    store().fastForward(2 * HOUR);
+    expect(store().settings.timeOffsetMs).toBe(26 * HOUR);
+    const stored = await readStored();
+    expect((stored!.state.settings as { timeOffsetMs?: number }).timeOffsetMs).toBe(26 * HOUR);
+  });
+
+  it('ignores zero and non-finite amounts', () => {
+    const before = store().settings;
+    store().fastForward(0);
+    store().fastForward(NaN);
+    store().fastForward(Infinity);
+    expect(store().settings).toBe(before);
+  });
+
+  it('can rewind with a negative amount', () => {
+    store().fastForward(5 * HOUR);
+    store().fastForward(-2 * HOUR);
+    expect(store().settings.timeOffsetMs).toBe(3 * HOUR);
+  });
+
+  it('shifts the default `now` of time-based actions', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(NOW);
+    store().fastForward(10 * HOUR);
+    const item = store().freeze({ ...sneakers, cooldown: '24h' });
+    expect(item.frozenAt).toBe(NOW + 10 * HOUR);
+    expect(item.thawAt).toBe(NOW + 34 * HOUR);
+    store().fastForward(30 * HOUR); // past thawAt
+    const decided = store().decide(item.id, 'let-go')!;
+    expect(decided.decidedAt).toBe(NOW + 40 * HOUR);
+    const refrozen = store().refreeze(item.id)!;
+    expect(refrozen.frozenAt).toBe(NOW + 40 * HOUR);
+    store().seedDemo();
+    expect(store().items.find((i) => i.id === 'demo-sneakers')!.frozenAt).toBe(NOW + 40 * HOUR - 60 * HOUR);
   });
 });
 

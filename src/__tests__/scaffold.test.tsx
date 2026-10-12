@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render, screen } from '@testing-library/react-native';
 import * as Notifications from 'expo-notifications';
 
-import Index from '../../app/index';
+import { AppText } from '../components/AppText';
 import { colors, radius, shadows, space, typography } from '../theme/tokens';
 import { COOLDOWN_HOURS, getItemStatus, MOOD_LABELS, type Item } from '../types';
 
@@ -71,9 +71,9 @@ describe('test environment mocks', () => {
   });
 });
 
-describe('placeholder screen', () => {
-  it('renders the app name', async () => {
-    await render(<Index />);
+describe('rendering', () => {
+  it('renders design-system text', async () => {
+    await render(<AppText variant="displayXL">Chill</AppText>);
     expect(screen.getByText('Chill')).toBeOnTheScreen();
   });
 });

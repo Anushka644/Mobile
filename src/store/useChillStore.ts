@@ -1,5 +1,9 @@
 // Chill app store: items in the freezer + settings, persisted on device with AsyncStorage.
 //
+// Time: every action that takes an optional `now` defaults it to the app clock — the device clock
+// plus `settings.timeOffsetMs` (the demo fast-forward, see src/lib/clock.ts) — so screens can call
+// `freeze(input)` without passing a time and still agree with `now()` / `useNow()`.
+//
 // Notifications are NOT handled here. Actions that change an item's thaw time
 // (freeze / refreeze / thawEarly / decide / removeItem / resetAll) leave `notificationId`
 // alone, so the caller can cancel the old notification and store the new one with
@@ -67,12 +71,13 @@ export const REQUIRED_ITEM_KEYS = [
 ] as const satisfies readonly (keyof Omit<Item, 'id'>)[];
 
 export interface ChillActions {
-  /** Puts a new item in the freezer and returns it. */
+  /** Puts a new item in the freezer (frozenAt = firstFrozenAt = now) and returns it. */
   freeze: (input: FreezeInput, now?: number) => Item;
   /**
    * Freezes an item again: frozenAt = now, new thawAt, refreezeCount + 1, decision cleared.
    * `cooldown` defaults to the item's current cooldown. Returns the updated item.
-   * The previous frozenAt is not kept, so timing insights count the item at its refreeze time.
+   * `firstFrozenAt` is preserved (set to the previous frozenAt for items stored without it), so
+   * timing insights keep counting the item at its original impulse moment.
    */
   refreeze: (id: string, cooldown?: CooldownKey, now?: number) => Item | undefined;
   /** Thaws a still-cooling, undecided item right away (thawAt = now). No-op otherwise. */
@@ -93,8 +98,13 @@ export interface ChillActions {
   /** Sets the savings goal, or removes it with `undefined`. */
   setGoal: (goal: Goal | undefined) => void;
   completeOnboarding: () => void;
-  /** Deletes every item and restores default settings (onboarded = false). */
+  /** Deletes every item and restores default settings (onboarded = false, no time offset). */
   resetAll: () => void;
+  /**
+   * Demo time travel: adds `ms` to `settings.timeOffsetMs` (persisted), which moves the app clock
+   * (`now()` / `useNow()` in src/lib/clock.ts) forward. Negative values rewind; non-finite are ignored.
+   */
+  fastForward: (ms: number) => void;
   /**
    * Loads demo data relative to `now`: replaces any previous demo items (ids `demo-*`), keeps the
    * user's own items, and sets the demo savings goal if no goal exists. Settings are otherwise untouched.
@@ -190,10 +200,16 @@ export const useChillStore = create<ChillState>()(
         return next;
       };
 
+      /** The app clock: device time + the persisted fast-forward offset (mirrors clock.ts `now()`). */
+      const clockNow = (): number => {
+        const offset = get().settings.timeOffsetMs;
+        return Date.now() + (typeof offset === 'number' && Number.isFinite(offset) ? offset : 0);
+      };
+
       return {
         ...defaultData(),
 
-        freeze: (input, now = Date.now()) => {
+        freeze: (input, now = clockNow()) => {
           const { settings } = get();
           const cooldown = input.cooldown ?? settings.defaultCooldown;
           const item: Item = compact({
@@ -207,6 +223,7 @@ export const useChillStore = create<ChillState>()(
             mood: input.mood,
             note: cleanText(input.note),
             frozenAt: now,
+            firstFrozenAt: now,
             thawAt: thawAtFor(cooldown, now),
             cooldown,
             refreezeCount: 0,
@@ -215,23 +232,24 @@ export const useChillStore = create<ChillState>()(
           return item;
         },
 
-        refreeze: (id, cooldown, now = Date.now()) =>
+        refreeze: (id, cooldown, now = clockNow()) =>
           updateOne(id, (item) => {
             const { decision: _decision, decidedAt: _decidedAt, ...rest } = item;
             const nextCooldown = cooldown ?? item.cooldown;
             return {
               ...rest,
               cooldown: nextCooldown,
+              firstFrozenAt: item.firstFrozenAt ?? item.frozenAt,
               frozenAt: now,
               thawAt: thawAtFor(nextCooldown, now),
               refreezeCount: item.refreezeCount + 1,
             };
           }),
 
-        thawEarly: (id, now = Date.now()) =>
+        thawEarly: (id, now = clockNow()) =>
           updateOne(id, (item) => (item.decision || now >= item.thawAt ? undefined : { ...item, thawAt: now })),
 
-        decide: (id, decision, now = Date.now()) =>
+        decide: (id, decision, now = clockNow()) =>
           updateOne(id, (item) => (item.decision ? undefined : { ...item, decision, decidedAt: now })),
 
         updateItem: (id, patch) =>
@@ -271,7 +289,12 @@ export const useChillStore = create<ChillState>()(
 
         resetAll: () => set(defaultData()),
 
-        seedDemo: (now = Date.now()) =>
+        fastForward: (ms) => {
+          if (typeof ms !== 'number' || !Number.isFinite(ms) || ms === 0) return;
+          set((s) => ({ settings: { ...s.settings, timeOffsetMs: (s.settings.timeOffsetMs ?? 0) + ms } }));
+        },
+
+        seedDemo: (now = clockNow()) =>
           set((s) => ({
             items: [...s.items.filter((i) => !isDemoItem(i)), ...buildDemoItems(now, s.settings.currency)],
             settings: s.settings.goal ? s.settings : { ...s.settings, goal: { ...DEMO_GOAL } },

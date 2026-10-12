@@ -96,9 +96,16 @@ export function byCategory(items: readonly Item[]): Record<Category, CategoryTot
 // ---------------------------------------------------------------------------
 // Timing (when do impulses strike?)
 //
-// Buckets by `frozenAt`. A refreeze resets frozenAt to the refreeze time (melt progress is measured
-// from it), so a refrozen item counts at its latest (re)freeze, not at the original impulse moment,
-// which is not stored. Keeping that would need a new optional Item field such as `firstFrozenAt`.
+// Buckets by the original impulse moment: `firstFrozenAt`, falling back to `frozenAt` for items stored
+// before that field existed. A refreeze resets frozenAt (melt progress is measured from it) but keeps
+// firstFrozenAt, so a refrozen item still counts once, at the moment the user first froze it.
+
+/** When the impulse struck: firstFrozenAt ?? frozenAt. */
+export function impulseTime(item: Pick<Item, 'frozenAt' | 'firstFrozenAt'>): number {
+  return typeof item.firstFrozenAt === 'number' && Number.isFinite(item.firstFrozenAt)
+    ? item.firstFrozenAt
+    : item.frozenAt;
+}
 
 /** Short weekday labels, Monday first (index matches byWeekday / peakImpulseWindow). */
 export const WEEKDAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -125,21 +132,21 @@ function hourOf(epochMs: number): number | null {
   return Number.isNaN(hour) ? null : hour;
 }
 
-/** 24 buckets: how many items were frozen in each local hour of the day (index = hour). */
+/** 24 buckets: how many items were first frozen in each local hour of the day (index = hour). */
 export function byHourOfDay(items: readonly Item[]): number[] {
   const buckets = new Array<number>(24).fill(0);
   for (const item of items) {
-    const hour = hourOf(item.frozenAt);
+    const hour = hourOf(impulseTime(item));
     if (hour !== null) buckets[hour]++;
   }
   return buckets;
 }
 
-/** 7 buckets, Monday first: how many items were frozen on each local weekday. */
+/** 7 buckets, Monday first: how many items were first frozen on each local weekday. */
 export function byWeekday(items: readonly Item[]): number[] {
   const buckets = new Array<number>(7).fill(0);
   for (const item of items) {
-    const day = weekdayIndex(item.frozenAt);
+    const day = weekdayIndex(impulseTime(item));
     if (day !== null) buckets[day]++;
   }
   return buckets;
@@ -165,8 +172,9 @@ export function peakImpulseWindow(items: readonly Item[]): ImpulseWindow | null 
   const weekdays = new Array<number>(7).fill(0);
   const hours = new Array<number>(24).fill(0);
   for (const item of items) {
-    const weekday = weekdayIndex(item.frozenAt);
-    const hour = hourOf(item.frozenAt);
+    const time = impulseTime(item);
+    const weekday = weekdayIndex(time);
+    const hour = hourOf(time);
     if (weekday === null || hour === null) continue;
     const slot = weekday * 24 + hour;
     grid.set(slot, (grid.get(slot) ?? 0) + 1);

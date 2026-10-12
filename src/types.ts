@@ -36,8 +36,16 @@ export interface Item {
   category: Category;
   mood?: Mood;
   note?: string;
-  /** epoch ms */
+  /**
+   * epoch ms — start of the current cooldown. A refreeze resets it (melt progress is measured from it).
+   */
   frozenAt: number;
+  /**
+   * epoch ms — when the item was first frozen (the original impulse moment). Set by `freeze`,
+   * preserved by `refreeze`. Optional for items stored before it existed: read it as
+   * `firstFrozenAt ?? frozenAt`.
+   */
+  firstFrozenAt?: number;
   /** epoch ms */
   thawAt: number;
   cooldown: CooldownKey;
@@ -60,6 +68,11 @@ export interface Settings {
   onboarded: boolean;
   notificationsEnabled: boolean;
   goal?: Goal;
+  /**
+   * Demo "fast-forward" offset added to the device clock, in ms (see src/lib/clock.ts).
+   * Optional; a missing value means 0. Persisted, and cleared by `resetAll`.
+   */
+  timeOffsetMs?: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {

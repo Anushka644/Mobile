@@ -172,7 +172,7 @@ Geometry, on a 200 × 200 box scaled by `size / 200`, with the ground line at y 
 - Padding 12, gap 8, white, `raised`, r28.
 - **Stage:** 146 × 128, r20, ice50 background (mint100 when ready), with the Cube at size about 128 bottom-aligned.
 - **Name:** Title/S, one line, ellipsis.
-- **Row:** price in Label/M plum500 on the left, Pill on the right (Ice with `formatTimeLeft`, or Ready).
+- **Row:** price in Label/M plum500 on the left, Pill on the right (Ice with `formatTimeLeftShort`, e.g. "29h left", or Ready).
 - **Ready variant:** 2.5px mint border.
 - **Press:** `spring.press` → `/item/[id]`, or `/thawed/[id]` when ready.
 
@@ -234,13 +234,13 @@ app/let-go/[id].tsx       Let-go celebration (fullScreenModal, auto → saved)
 ```
 
 ### 4.1 Onboarding (3 slides, swipeable, page dots)
-Each slide is a cream canvas with a hero illustration in the top 55%, a Display/L title, Body/L copy in plum500, and dots plus a CTA at the bottom.
+Each slide is a cream canvas with its glow preset (`onboarding1..3`, see Background glows), a hero illustration in the top 55%, a Display/L title, Body/L copy in plum500, and dots plus a CTA at the bottom, 24pt above the screen bottom (no home indicator).
 
 1. **"Wants melt. Money doesn't."**
    - Illustration: a big frozen Cube (sneakers) with snow dots.
    - Copy: "Freeze the things you’re itching to buy. If you still want them when they thaw, go for it."
 2. **"Give it time to cool."**
-   - Illustration: three cubes at melt 0/50/75 in a row, with a lavender glow.
+   - Illustration: three cubes at melt 0/50/75 in a row (the lavender100 primary glow comes from the preset).
    - Copy: "Pick a cooldown — a day, three, a week. We’ll nudge you when it’s ready."
 3. **"Let it go, watch it grow."**
    - Illustration: a Jar (Level Mid) with coins dropping in.
@@ -251,7 +251,7 @@ Each slide is a cream canvas with a hero illustration in the top 55%, a Display/
 Slides 1–2 have a Primary "Next" button and a "Skip" text link at the top right.
 
 ### 4.2 Freezer — home (`01 Freezer — Home`, see the PNG)
-Background: lavender100 glow top-right and ice200 glow top-left.
+Background: plain cream canvas, no glows (see Background glows).
 
 - **Header**
   - Caption date ("TUESDAY, OCT 14") over "Your freezer" (Display/L).
@@ -282,7 +282,7 @@ A modal sheet with a cream background, top radius 36, and a 36 × 5 grabber.
 - **"WHY DO YOU WANT IT?"** A wrap row of mood chips (optional, single select).
 - **Category** chips (auto-guessed from name or URL via `guessCategory`, editable).
 - **"COOLDOWN":** CooldownPicker, default `settings.defaultCooldown`.
-- **Sticky bottom:** an Ice button "Freeze it" (snowflake icon) at full width. It is disabled until name and price are valid.
+- **Sticky bottom:** an Ice button "Freeze it" (snowflake icon) at full width, 24pt above the screen bottom (no home indicator). It is disabled until name and price are valid.
 - **On submit — the freezing moment** (about 1.6s, a full-sheet overlay):
   1. The product tile drops from above into the centre (`spring.pop`, with squash scaleY 0.85 → scaleX 1.08 on landing).
   2. The cube body grows around it from scale 0.6 → 1, and frost fades in over 400ms.
@@ -293,11 +293,11 @@ A modal sheet with a cream background, top radius 36, and a 36 × 5 grabber.
   Before navigating: `ensurePermission()` on the first freeze, then `scheduleThawNotification` → `setNotificationId`.
 
 ### 4.4 Item — cooling (`02 Item — Cooling`, see the PNG)
-- **Backdrop:** an ice gradient over the top 470pt (#CDEBFF → #EAF6FF → cream), a lavender glow on the right, and floating snow dots that drift slowly.
+- **Backdrop:** the lavender100 top glow over an ice gradient across the top 470pt (#CDEBFF → #EAF6FF → cream) — glow preset `item` — and floating snow dots that drift slowly.
 - **Nav:** Glass back button; centre "Frozen {relative} ago" (Label/S ice800); Glass arrow-up-right that opens the url (hidden without a url).
 - **Hero:** the Cube at size about 230, continuously animated with its idle breathing.
 - **Countdown:**
-  - The big time left uses `formatTimeLeft` without the " left" suffix ("29h 14m"), in Numeric/XL.
+  - The big time left uses `formatHeroCountdown` ("29h 14m"; hours up to 72h, then "4d 6h"), in Numeric/XL.
   - Below it, a 260 × 12 progress track (ice100, inset) with a gradient fill (ice300 → ice600) at the melt %.
   - Then the caption "58% MELTED · THAWS THU 9:41 PM" (ice800).
 - **Details card:** white, r28, padding 20, `raised`.
@@ -309,7 +309,7 @@ A modal sheet with a cream background, top radius 36, and a 36 × 5 grabber.
 - If the item becomes ready while this screen is open, auto-navigate to `/thawed/[id]` (replace).
 
 ### 4.5 Thawed decision (`03 Thawed — Still want it?`, see the PNG)
-- **Glows:** mint100 large (left/centre) and butter100 (top-right).
+- **Glows:** butter100 top glow + mint100 primary glow behind the cube (preset `thawed`).
 - **Close:** a Glass close button at the top right.
 - **Headline:**
   - Eyebrow: sparkles + "IT’S THAWED" (Caption mint700).
@@ -330,7 +330,7 @@ A modal sheet with a cream background, top radius 36, and a 36 × 5 grabber.
   - Footnote: "No wrong answer. Buying is allowed." (Body/S plum300).
 
 ### 4.6 Let-go celebration (`app/let-go/[id].tsx`)
-A full screen on a mint100 → cream gradient. Sequence, about 2.4s:
+A full screen on a mint100 → cream gradient with the butter100 top glow and a very diffuse mint500 glow behind the jar (preset `letGo`). Buttons sit 24pt above the screen bottom. Sequence, about 2.4s:
 1. The thawed product tile fades and shrinks while 8–10 Coins burst outward from its centre (random arc, rotation, `spring.pop`).
 2. The coins fall into a Jar that rises from the bottom, with `haptics.heavy` on the burst.
 3. The amount counts up: "+$140" (Numeric/XL, mint700) under "Let go. Nice." (Display/L).
@@ -341,7 +341,7 @@ Primary button "Back to my freezer" → `/` (dismiss), and Ghost "See my jar" �
 
 ### 4.7 Saved (tab)
 - **Header:** "Saved" (Display/L), with "by letting things melt" (Body/M plum500) below.
-- **Hero:** the big Jar (level from goal progress), centred, with a lavender glow behind it. The total ("$934", Numeric/XL) sits above the jar.
+- **Hero:** the big Jar (level from goal progress), centred, over the mint100 top glow and the lavender100 primary glow (preset `saved`). The total ("$934", Numeric/XL) sits above the jar.
 - **Goal card:** white, r28.
   - Goal name (Title/S) + "$934 of $1,200" (Body/S) + a progress bar (mint gradient) + percent.
   - If there's no goal, show a dashed card: "Saving for something? Add a goal".

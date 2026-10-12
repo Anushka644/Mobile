@@ -30,6 +30,10 @@ export const palette = {
   mint300: '#A9E8D5',
   mint100: '#DDF6EE',
 
+  /** Coin edge shade (Coin: bottom rim, used at 0.45 alpha). */
+  butter700: '#C9861A',
+  /** Coin embossed snowflake. */
+  butter600: '#D99A2B',
   butter500: '#FFD36E',
   butter300: '#FFE4A3',
   butter100: '#FFF4D6',
