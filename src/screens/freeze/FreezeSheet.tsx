@@ -1,11 +1,13 @@
-// Freeze sheet (spec §4.3, design/exports/11-freeze-sheet@2x.png + 12-frozen-solid@2x.png).
+// Freeze sheet (spec §4.3; v2 "frost minimal", docs/DESIGN_SYSTEM_V2.md).
 //
-// Header → top slot (the clipboard suggestion card, or the link field: Paste folds the card into
-// the filled field) → photo tile beside name + price → mood chips → auto-guessed category chips →
-// cooldown, with a sticky Ice "Freeze it for {cooldown}" CTA 24pt above the bottom edge. Spacing
-// follows the Figma frame, so on an 852pt screen the whole form fits above the CTA.
-// On submit: the item is frozen, the freezing moment plays (~1.6s), then the thaw reminder is set
-// up (permission on the first own freeze) and the sheet is replaced by /item/[id].
+// Serif "Freeze it" + a quiet subtitle → top slot (the clipboard suggestion card, or the link field:
+// Paste folds the card into the filled field) → the photo tile (an empty frost tile with a camera
+// glyph; once the want has a name or a photo it previews the want behind clear, tinted glass) beside
+// name + price → mood chips → auto-guessed category chips → cooldown, with a sticky ink
+// "Freeze it for {cooldown}" CTA 24pt above the bottom edge (disabled: 40% opacity).
+// On submit: the item is frozen, the freezing moment plays (the frost rises over that same tile),
+// then the thaw reminder is set up (permission on the first own freeze) and the sheet is replaced by
+// /item/[id] — after FREEZING_MOMENT_MS, or right away from the moment's "See it".
 // The CTA and the scroll area ride above the software keyboard.
 
 import { Stack, useRouter } from 'expo-router';
@@ -29,6 +31,7 @@ import {
   BOTTOM_GAP,
   CooldownPicker,
   cooldownPhrase,
+  Headline,
   IconButton,
   Screen,
   TextField,
@@ -112,6 +115,8 @@ export function FreezeSheet() {
 
   const mounted = useRef(true);
   const submitting = useRef(false);
+  /** Ends the freezing moment early ("See it"). */
+  const skipMoment = useRef<(() => void) | null>(null);
   const priceRef = useRef<TextInput>(null);
   const nameRef = useRef<TextInput>(null);
 
@@ -286,7 +291,14 @@ export function FreezeSheet() {
     });
 
     void (async () => {
-      await new Promise((resolve) => setTimeout(resolve, FREEZING_MOMENT_MS));
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, FREEZING_MOMENT_MS);
+        skipMoment.current = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+      skipMoment.current = null;
       // Permission prompt (first own freeze) lands on "We’ll nudge you." — then the item screen.
       await scheduleReminder(item, firstOwnFreeze);
       if (mounted.current) router.replace(`/item/${item.id}`);
@@ -334,7 +346,7 @@ export function FreezeSheet() {
                 fade={moreBelow}
                 label={`Freeze it for ${cooldownPhrase(cooldown)}`}
                 icon="snowflake"
-                variant="ice"
+                variant="primary"
                 disabled={!valid}
                 onPress={submit}
                 accessibilityHint={valid ? undefined : 'Add a name and a price first'}
@@ -345,10 +357,8 @@ export function FreezeSheet() {
           >
             <View style={styles.header}>
               <View style={styles.headerText}>
-                <AppText variant="titleL" accessibilityRole="header">
-                  Freeze it
-                </AppText>
-                <AppText variant="bodyM" color={colors.text.secondary}>
+                <Headline accessibilityRole="header">{'Freeze *it*'}</Headline>
+                <AppText variant="bodyM" color={colors.text.secondary} style={styles.subtitle}>
                   Put the want on ice. Decide later.
                 </AppText>
               </View>
@@ -449,7 +459,7 @@ export function FreezeSheet() {
             </View>
 
             <View style={styles.section}>
-              <FieldCaption label="Cooldown" trailing={<CaptionNote text={`Thaws ${thawLabel}`} />} />
+              <FieldCaption label="Cooldown" trailing={<CaptionNote tone="ice" text={`Thaws ${thawLabel}`} />} />
               <CooldownPicker value={cooldown} onChange={setCooldown} testID="freeze-cooldown" />
             </View>
           </Screen>
@@ -462,6 +472,7 @@ export function FreezeSheet() {
           cooldownLabel={cooldownPhrase(moment.item.cooldown)}
           thawLabel={moment.thawLabel}
           nudge={moment.nudge}
+          onContinue={() => skipMoment.current?.()}
         />
       ) : null}
     </View>
@@ -470,9 +481,10 @@ export function FreezeSheet() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { paddingTop: 32 },
+  content: { paddingTop: 30 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   headerText: { flex: 1 },
+  subtitle: { marginTop: 2 },
   slot: { paddingTop: 14 },
   details: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 17 },
   fields: { flex: 1, gap: 14 },

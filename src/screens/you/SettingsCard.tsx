@@ -1,15 +1,15 @@
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
-import { StyleSheet, View, type ColorValue, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { AppText, Icon, IconBadge, PressableScale, type IconName } from '@/components';
+import { AppText, Icon, PressableScale, type IconName } from '@/components';
 import { colors, radius, shadow } from '@/theme/tokens';
 
-// Row geometry from 07-you@2x.png: 60 tall, 16 side padding, a 36 rounded badge, 12 to the label;
-// hairline dividers start at the label and run to the card's right edge.
-const ROW_HEIGHT = 60;
+// v2 grouped list (iOS settings style): 56pt rows on a white card, a monochrome 20pt line icon, the
+// label, the value in secondary text and a quiet chevron. Hairline dividers start at the label.
+const ROW_HEIGHT = 56;
 const PAD = 16;
-const BADGE = 36;
-const BADGE_GAP = 12;
+const ICON = 20;
+const ICON_GAP = 14;
 
 export interface SettingsCardProps {
   children?: ReactNode;
@@ -17,7 +17,7 @@ export interface SettingsCardProps {
   testID?: string;
 }
 
-/** White r28 Clay/Raised card that stacks SettingsRows with inset hairline dividers. */
+/** White card (hairline lift) that stacks SettingsRows with inset hairline dividers. */
 export function SettingsCard({ children, style, testID }: SettingsCardProps) {
   const rows = Children.toArray(children).filter(isValidElement);
   return (
@@ -36,21 +36,19 @@ export function SettingsCard({ children, style, testID }: SettingsCardProps) {
 
 export interface SettingsRowProps {
   icon: IconName;
-  /** Badge background (soft tint). */
-  tint: ColorValue;
-  /** Badge glyph colour. */
-  ink: ColorValue;
   label: string;
-  /** Label colour (e.g. coral for "Reset everything"). Default text.primary. */
-  labelColor?: ColorValue;
-  /** Body/L plum500 value before the chevron, e.g. "3 days". */
+  /** 'destructive' sets the icon and label in red (e.g. "Reset everything"). Default 'default'. */
+  tone?: 'default' | 'destructive';
+  /** Secondary value before the chevron, e.g. "3 days". */
   value?: string;
-  /** Show the value in plum300 (a placeholder such as "Add one"). */
+  /** Show the value in tertiary text (a placeholder such as "Add one"). */
   valueMuted?: boolean;
   /** What screen readers say for the value when the shown one is shortened (e.g. the full goal name). */
   accessibilityValue?: string;
   /** A trailing control (e.g. a Toggle) instead of the value + chevron. */
   accessory?: ReactNode;
+  /** Show the chevron (rows that open something). Default true; actions pass false. */
+  chevron?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
   accessibilityHint?: string;
@@ -60,17 +58,16 @@ export interface SettingsRowProps {
   testID?: string;
 }
 
-/** A settings row: tinted badge, label, value + chevron (or an accessory such as a Toggle). */
+/** A settings row: line icon, label, value + chevron (or an accessory such as a Toggle). */
 export function SettingsRow({
   icon,
-  tint,
-  ink,
   label,
-  labelColor = colors.text.primary,
+  tone = 'default',
   value,
   valueMuted,
   accessibilityValue,
   accessory,
+  chevron = true,
   onPress,
   onLongPress,
   accessibilityHint,
@@ -78,10 +75,11 @@ export function SettingsRow({
   accessibilityState,
   testID,
 }: SettingsRowProps) {
+  const ink = tone === 'destructive' ? colors.coral500 : colors.text.primary;
   const content = (
     <>
-      <IconBadge icon={icon} tint={tint} color={ink} size={BADGE} iconSize={20} shape="rounded" />
-      <AppText variant="labelL" color={labelColor} numberOfLines={1} style={styles.label}>
+      <Icon name={icon} size={ICON} color={ink} strokeWidth={1.6} />
+      <AppText variant="labelL" color={ink} numberOfLines={1} style={styles.label}>
         {label}
       </AppText>
       <View style={styles.trailing}>
@@ -89,15 +87,16 @@ export function SettingsRow({
           <>
             {value ? (
               <AppText
-                variant="bodyL"
+                variant="bodyM"
                 color={valueMuted ? colors.text.tertiary : colors.text.secondary}
                 numberOfLines={1}
+                tabular
                 style={styles.value}
               >
                 {value}
               </AppText>
             ) : null}
-            <Icon name="chevron-right" size={20} color={colors.text.tertiary} strokeWidth={2.2} />
+            {chevron ? <Icon name="chevron-right" size={16} color={colors.text.tertiary} strokeWidth={1.8} /> : null}
           </>
         )}
       </View>
@@ -117,7 +116,7 @@ export function SettingsRow({
       onPress={onPress}
       onLongPress={onLongPress}
       haptic={onPress ? 'tap' : false}
-      scaleTo={0.98}
+      scaleTo={1}
       pressedStyle={styles.pressed}
       accessibilityRole={accessibilityRole}
       accessibilityLabel={spokenValue ? `${label}, ${spokenValue}` : label}
@@ -133,15 +132,15 @@ export function SettingsRow({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     backgroundColor: colors.bg.surface,
     ...shadow('raised'),
   },
-  clip: { borderRadius: radius.lg, overflow: 'hidden', paddingVertical: 4 },
+  clip: { borderRadius: radius.md, overflow: 'hidden' },
   divider: {
-    height: 1,
-    marginLeft: PAD + BADGE + BADGE_GAP,
-    backgroundColor: colors.border.subtle,
+    height: StyleSheet.hairlineWidth,
+    marginLeft: PAD + ICON + ICON_GAP,
+    backgroundColor: colors.border.strong,
   },
   row: {
     minHeight: ROW_HEIGHT,
@@ -149,9 +148,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: BADGE_GAP,
+    gap: ICON_GAP,
   },
-  pressed: { backgroundColor: colors.bg.elevated },
+  pressed: { backgroundColor: colors.bg.canvas },
   // Labels are short and fixed, so they keep their width (up to 72% at large text sizes) and a long
   // value (a goal name) ellipsizes instead; the trailing group fills the rest, right-aligned.
   label: { flexShrink: 0, maxWidth: '72%' },
@@ -162,7 +161,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 10,
+    gap: 6,
   },
   value: { flexShrink: 1 },
 });

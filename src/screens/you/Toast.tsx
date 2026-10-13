@@ -3,7 +3,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AppText, Icon, springPress, useReducedMotion, useTopInset, type IconName } from '@/components';
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors, radius, shadow, withAlpha } from '@/theme/tokens';
 
 export interface ToastMessage {
   text: string;
@@ -53,7 +53,7 @@ export interface ToastProps {
 }
 
 /**
- * A plum pill that drops in under the status bar to confirm demo actions ("Sample freezer loaded")
+ * An ink capsule that drops in under the status bar to confirm demo actions ("Sample freezer loaded")
  * and fades out on its own. It lives at the top because the tab bar's 170pt cream fade would wash
  * out anything floating just above the bar.
  */
@@ -90,7 +90,7 @@ export function Toast({ toast, onHide }: ToastProps) {
         accessibilityLiveRegion="polite"
         testID="you-toast"
       >
-        {message.icon ? <Icon name={message.icon} size={18} color={colors.mint500} strokeWidth={2.4} /> : null}
+        {message.icon ? <Icon name={message.icon} size={18} color={withAlpha(colors.white, 0.72)} strokeWidth={1.8} /> : null}
         <AppText variant="labelM" color={colors.text.inverse} style={styles.text} numberOfLines={2}>
           {message.text}
         </AppText>
@@ -104,7 +104,7 @@ export function Toast({ toast, onHide }: ToastProps) {
             accessibilityRole="button"
             style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
           >
-            <AppText variant="labelM" color={colors.mint500}>
+            <AppText variant="labelM" color={colors.ice400}>
               {message.action.label}
             </AppText>
           </Pressable>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   toast: {
     maxWidth: 353,
     minHeight: 48,
-    paddingLeft: 18,
+    paddingLeft: 16,
     paddingRight: 8,
     paddingVertical: 8,
     borderRadius: radius.full,
@@ -127,10 +127,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    ...shadow('button'),
+    ...shadow('raised'),
   },
   noTouch: { pointerEvents: 'none' },
   text: { flexShrink: 1, paddingRight: 10 },
-  action: { paddingHorizontal: 12, height: 32, borderRadius: radius.full, justifyContent: 'center' },
+  action: {
+    paddingHorizontal: 12,
+    height: 32,
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    backgroundColor: withAlpha(colors.white, 0.08),
+  },
   actionPressed: { opacity: 0.6 },
 });

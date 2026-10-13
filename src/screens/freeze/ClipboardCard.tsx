@@ -1,17 +1,16 @@
-// "Paste from clipboard?" suggestion (spec §4.3, 11-freeze-sheet): an ice100 card with a 2px ice300
-// border, a link glyph, the shortened URL (+ price when the copied text had one) and a mini Ice
-// "Paste" button. It expands in when a suggestion arrives and folds away after pasting.
+// "Paste from clipboard?" suggestion (spec §4.3; v2): a white card with a hairline, a link glyph,
+// the shortened URL (+ price when the copied text had one) and a small ink "Paste" pill. It expands
+// in when a suggestion arrives and folds away after pasting.
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { AppText, Icon, PressableScale, useReducedMotion } from '@/components';
+import { AppText, Button, Icon, useReducedMotion } from '@/components';
 import type { ClipboardSuggestion } from '@/lib/clipboard';
 import { formatMoney } from '@/lib/money';
-import { colors, radius, shadow, withAlpha } from '@/theme/tokens';
+import { colors, radius, shadow } from '@/theme/tokens';
 
 import { displayUrl } from './formLogic';
 import { calm } from './motion';
@@ -26,57 +25,25 @@ export function ClipboardCard({ suggestion, currency, onPaste }: ClipboardCardPr
   const price = suggestion.priceCents ? formatMoney(suggestion.priceCents, currency) : null;
   return (
     <View style={styles.card} testID="clipboard-card">
-      <Icon name="link" size={22} color={colors.ice800} strokeWidth={2.2} />
+      <Icon name="link" size={20} color={colors.text.primary} strokeWidth={1.6} />
       <View style={styles.text}>
         <AppText variant="labelM" numberOfLines={1}>
           Paste from clipboard?
         </AppText>
         <View style={styles.urlRow}>
-          <AppText variant="bodyS" color={colors.ice800} numberOfLines={1} style={styles.url}>
+          <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1} style={styles.url}>
             {displayUrl(suggestion.url)}
           </AppText>
           {price ? (
             // A margin, not a leading space: react-native-web drops a Text's leading whitespace.
-            <AppText variant="bodyS" color={colors.ice800} numberOfLines={1} style={styles.price}>
+            <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1} tabular style={styles.price}>
               {`· ${price}`}
             </AppText>
           ) : null}
         </View>
       </View>
-      <MiniIceButton label="Paste" onPress={onPaste} accessibilityHint="Fills in the name, price and link" />
+      <Button label="Paste" size="xs" onPress={onPaste} accessibilityHint="Fills in the name, price and link" />
     </View>
-  );
-}
-
-/** Compact Ice pill (32 high, 44pt touch area via hitSlop) for use inside cards. */
-export function MiniIceButton({
-  label,
-  onPress,
-  accessibilityHint,
-}: {
-  label: string;
-  onPress: () => void;
-  accessibilityHint?: string;
-}) {
-  return (
-    <PressableScale
-      onPress={onPress}
-      haptic="tap"
-      hitSlop={8}
-      accessibilityLabel={label}
-      accessibilityHint={accessibilityHint}
-      style={styles.mini}
-    >
-      <LinearGradient
-        colors={[colors.ice100, colors.ice200]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[StyleSheet.absoluteFill, styles.miniFill]}
-      />
-      <AppText variant="labelM" color={colors.ice800}>
-        {label}
-      </AppText>
-    </PressableScale>
   );
 }
 
@@ -139,31 +106,19 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 14,
     minHeight: 64,
-    paddingLeft: 16,
-    paddingRight: 14,
-    paddingVertical: 9,
+    paddingLeft: 18,
+    paddingRight: 12,
+    paddingVertical: 10,
     borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: colors.ice300,
-    backgroundColor: colors.ice100,
+    backgroundColor: colors.bg.surface,
+    ...shadow('soft'),
   },
   text: { flex: 1, minWidth: 0, gap: 3 },
   urlRow: { flexDirection: 'row', alignItems: 'baseline' },
   url: { flexShrink: 1 },
   price: { flexShrink: 0, marginLeft: 4 },
-  mini: {
-    height: 32,
-    paddingHorizontal: 13,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: withAlpha(colors.white, 0.7),
-    ...shadow('iceGlow'),
-  },
-  miniFill: { borderRadius: radius.full },
   clip: { overflow: 'hidden' },
   closed: { pointerEvents: 'none' },
   content: { flexShrink: 0 },

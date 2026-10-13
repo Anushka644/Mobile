@@ -38,12 +38,24 @@ export function FieldCaption({ label, trailing, style }: FieldCaptionProps) {
   );
 }
 
-/** Ice-blue accessory text with an optional leading icon, for FieldCaption's trailing slot. */
-export function CaptionNote({ text, icon }: { text: string; icon?: 'sparkles' | 'clock' }) {
+/**
+ * Mono accessory text with an optional leading icon, for FieldCaption's trailing slot. `ice` is for
+ * time (the thaw moment); `quiet` for everything else (e.g. "Guessed for you").
+ */
+export function CaptionNote({
+  text,
+  icon,
+  tone = 'quiet',
+}: {
+  text: string;
+  icon?: 'sparkles' | 'clock';
+  tone?: 'ice' | 'quiet';
+}) {
+  const color = tone === 'ice' ? colors.ice600 : colors.text.tertiary;
   return (
     <View style={styles.note}>
-      {icon ? <Icon name={icon} size={15} color={colors.ice800} strokeWidth={2.2} /> : null}
-      <AppText variant="labelM" color={colors.ice800} numberOfLines={1} tabular>
+      {icon ? <Icon name={icon} size={13} color={color} strokeWidth={1.8} /> : null}
+      <AppText variant="caption" color={color} numberOfLines={1} tabular>
         {text}
       </AppText>
     </View>
@@ -84,12 +96,11 @@ export interface CategoryChipsProps {
 }
 
 /**
- * Room for the chips' shadows inside the horizontal scroller (it clips its content): the selected
- * chip's `button` shadow reaches ~24pt below it (10 offset + 18 blur − 4 spread) and ~6 above.
+ * Room for the chips' hairline shadows inside the horizontal scroller (it clips its content).
  * Padded inside, cancelled by negative margins outside, so the layout doesn't move.
  */
-const SHADOW_ABOVE = 8;
-const SHADOW_BELOW = 26;
+const SHADOW_ABOVE = 4;
+const SHADOW_BELOW = 8;
 
 /**
  * Category chips in one horizontally scrolling row that bleeds to the screen edges. When the value
@@ -157,7 +168,7 @@ const styles = StyleSheet.create({
     gap: 12,
     minHeight: 20,
   },
-  note: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 10 },
   bleed: { marginHorizontal: -GUTTER, marginTop: -SHADOW_ABOVE, marginBottom: -SHADOW_BELOW, flexGrow: 0 },
   scrollRow: { gap: 8, paddingHorizontal: GUTTER, paddingTop: SHADOW_ABOVE, paddingBottom: SHADOW_BELOW },
