@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring } from 'react-native-reanimated';
 
-import { AppText, Icon, springPop, useReducedMotion } from '@/components';
+import { AppText, Coin, springCalm, useReducedMotion } from '@/components';
 import { colors, radius, shadow } from '@/theme/tokens';
 
 import type { Streak } from './insightsModel';
@@ -12,19 +12,19 @@ export interface StreakCardProps {
   play: number;
 }
 
-/** Flames shown before the cluster collapses into "+N". */
-const MAX_FLAMES = 5;
-const FLAME = 36;
-const OVERLAP = 10;
+/** Droplets shown before the row ends in "+N". */
+const MAX_DROPS = 5;
+const DROP = 18;
 
 /**
- * "Longest streak": "3 let-gos in a row" with a cluster of overlapping flame badges (one per
- * let-go, up to five) that pop in one by one on focus.
+ * "Longest streak" (v2): a quiet white card — mono eyebrow, "3 let-gos in a row", the supporting
+ * line — and a row of small ice droplets, one per let-go in the run (up to five, then "+N"), that
+ * fall into place on focus. No streak yet: one faint droplet.
  */
 export function StreakCard({ streak, play }: StreakCardProps) {
-  const lit = Math.min(streak.longest, MAX_FLAMES);
+  const lit = Math.min(streak.longest, MAX_DROPS);
   const extra = streak.longest - lit;
-  const flames = Math.max(1, lit);
+  const drops = Math.max(1, lit);
 
   return (
     <View style={styles.card} accessible accessibilityLabel={`Longest streak: ${streak.title}. ${streak.line}`} testID="insights-streak">
@@ -32,59 +32,48 @@ export function StreakCard({ streak, play }: StreakCardProps) {
         <AppText variant="caption" color={colors.text.secondary}>
           Longest streak
         </AppText>
-        <AppText variant="titleM">{streak.title}</AppText>
+        <AppText variant="titleM" style={styles.title}>
+          {streak.title}
+        </AppText>
         <AppText variant="bodyS" color={colors.text.secondary}>
           {streak.line}
         </AppText>
       </View>
-      <View style={[styles.cluster, { width: flames * FLAME - (flames - 1) * OVERLAP }]}>
-        {Array.from({ length: flames }, (_, i) => (
-          <Flame
-            key={i}
-            index={i}
-            lit={streak.longest > 0}
-            label={extra > 0 && i === flames - 1 ? `+${extra + 1}` : null}
-            play={play}
-          />
+      <View style={styles.drops}>
+        {Array.from({ length: drops }, (_, i) => (
+          <Drop key={i} index={i} lit={streak.longest > 0} play={play} />
         ))}
+        {extra > 0 ? (
+          <AppText variant="caption" color={colors.text.secondary} style={styles.extra}>
+            {`+${extra}`}
+          </AppText>
+        ) : null}
       </View>
     </View>
   );
 }
 
-function Flame({ index, lit, label, play }: { index: number; lit: boolean; label: string | null; play: number }) {
+function Drop({ index, lit, play }: { index: number; lit: boolean; play: number }) {
   const reduced = useReducedMotion();
-  const pop = useSharedValue(reduced ? 1 : 0);
+  const fall = useSharedValue(reduced ? 1 : 0);
   useEffect(() => {
     if (reduced) {
-      pop.set(1);
+      fall.set(1);
       return;
     }
     if (play === 0) return;
-    pop.set(0);
-    pop.set(withDelay(300 + index * 90, withSpring(1, springPop)));
-  }, [play, index, reduced, pop]);
+    fall.set(0);
+    fall.set(withDelay(300 + index * 90, withSpring(1, springCalm)));
+  }, [play, index, reduced, fall]);
 
   const style = useAnimatedStyle(() => {
-    const v = pop.get();
-    return { opacity: Math.min(1, v * 3), transform: [{ scale: 0.4 + 0.6 * v }] };
+    const v = fall.get();
+    return { opacity: Math.min(1, v * 2) * (lit ? 1 : 0.3), transform: [{ translateY: (1 - v) * -10 }] };
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.flame,
-        { left: index * (FLAME - OVERLAP), zIndex: 10 - index, backgroundColor: lit ? colors.coral100 : colors.plum100 },
-        style,
-      ]}
-    >
-      {label ? (
-        <AppText variant="labelS" color={colors.coral500}>
-          {label}
-        </AppText>
-      ) : (
-        <Icon name="flame" size={19} color={lit ? colors.coral500 : colors.plum300} strokeWidth={2.2} />
-      )}
+    <Animated.View style={style}>
+      <Coin size={DROP} shadowed={false} />
     </Animated.View>
   );
 }
@@ -95,21 +84,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     padding: 20,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     backgroundColor: colors.bg.surface,
     ...shadow('raised'),
   },
-  text: { flex: 1, gap: 4 },
-  cluster: { height: FLAME },
-  flame: {
-    position: 'absolute',
-    top: 0,
-    width: FLAME,
-    height: FLAME,
-    borderRadius: FLAME / 2,
-    borderWidth: 2,
-    borderColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  text: { flex: 1, gap: 3 },
+  title: { marginTop: 6 },
+  drops: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  extra: { marginLeft: 4 },
 });

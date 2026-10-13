@@ -33,7 +33,7 @@ describe('Insights', () => {
     expect(screen.getByText('Insights')).toBeTruthy();
     expect(screen.getByText('You let go of 6 of 8 wants')).toBeTruthy();
     expect(screen.getByText('That’s $934 you didn’t spend.')).toBeTruthy();
-    expect(screen.getByTestId('insights-donut')).toBeTruthy();
+    expect(screen.getByTestId('insights-keep-bar')).toBeTruthy();
     expect(screen.getByText('When impulses strike')).toBeTruthy();
     expect(screen.getByText(/^Your peak: \w+day around 11 PM$/)).toBeTruthy();
     expect(screen.getByText('11 PM')).toBeTruthy();

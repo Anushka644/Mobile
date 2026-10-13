@@ -1,11 +1,10 @@
-// Saved (tab) — spec §4.7, design/exports/05-saved@2x.png.
+// Saved (tab) — spec §4.7, v2 "frost minimal" (docs/DESIGN_SYSTEM_V2.md).
 //
-// Glow preset `saved` (mint100 top glow + lavender100 primary glow behind the jar). Header "Saved" /
-// "by letting things melt"; the hero total over the big Jar (fill = goal progress, or the let-go
-// count without a goal) with the "8 wants let go" pill; the goal card (tap → edit-goal sheet) or a
-// dashed "Add a goal" card; "Melted away" (let-go history, newest first); and a collapsible,
-// neutral "You bought". Scrolls under the floating tab bar (bottom padding 178, past the tab bar's
-// 170pt cream fade).
+// Plain paper. Serif "Saved" / "by letting things melt"; the total in Geist Light over the savings
+// glass (fill = goal progress, or the let-go count without a goal); the
+// goal as a quiet row with a thin ink bar between hairlines (tap → goal sheet), or an "Add a goal"
+// row; "Melted away" (let-go history, newest first) as plain hairline rows; and a collapsible,
+// neutral "You bought" with the same rows. Scrolls under the floating tab bar.
 
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -14,7 +13,7 @@ import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanim
 import { AppText, jarLevel, Screen, SectionHeader, useReducedMotion, useTabBarScrollPadding } from '@/components';
 import { selectBought, selectGoalProgress, selectLetGo, selectSavedCents } from '@/store/selectors';
 import { useChillStore } from '@/store/useChillStore';
-import { colors, radius, withAlpha } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 import { GoalSheet } from '@/screens/goal/GoalSheet';
 
 import { AddGoalCard } from './AddGoalCard';
@@ -41,10 +40,10 @@ export function SavedScreen() {
   const rise = (i: number) => (reduced ? undefined : FadeInDown.delay(80 + i * 50).springify().damping(18));
 
   return (
-    <Screen scroll glow="saved" bottomPadding={bottomPadding} contentStyle={styles.content} testID="saved-screen">
+    <Screen scroll bottomPadding={bottomPadding} contentStyle={styles.content} testID="saved-screen">
       <LayoutAnimationConfig skipExiting>
         <View style={styles.header}>
-          <AppText variant="displayL" accessibilityRole="header">
+          <AppText variant="displayL" accessibilityRole="header" style={styles.title}>
             Saved
           </AppText>
           <AppText variant="bodyM" color={colors.text.secondary}>
@@ -57,7 +56,9 @@ export function SavedScreen() {
         <Animated.View entering={rise(0)}>
           {goal && settings.goal ? (
             <GoalProgressCard
+              variant="row"
               title={settings.goal.name}
+              titleVariant="labelL"
               trailing={goalPercentLabel(goal.pct)}
               progress={goal.pct / 100}
               caption={goalAmountCaption(goal.saved, goal.target, currency)}
@@ -75,7 +76,7 @@ export function SavedScreen() {
         </Animated.View>
 
         <Animated.View entering={rise(1)} style={styles.section}>
-          <SectionHeader title="Melted away" trailing={letGo.length > 1 ? 'Newest first' : undefined} />
+          <SectionHeader title="Melted away" variant="titleS" trailing={letGo.length > 1 ? 'Newest first' : undefined} />
           {letGo.length > 0 ? (
             <View style={styles.list}>
               {letGo.map((item) => (
@@ -84,10 +85,8 @@ export function SavedScreen() {
             </View>
           ) : (
             <View style={styles.empty} testID="saved-empty">
-              <AppText variant="titleS" align="center">
-                Nothing has melted yet
-              </AppText>
-              <AppText variant="bodyS" color={colors.text.secondary} align="center">
+              <AppText variant="labelM">Nothing has melted yet</AppText>
+              <AppText variant="bodyS" color={colors.text.secondary}>
                 When a want thaws and you let it go, its price drops into the jar.
               </AppText>
             </View>
@@ -95,7 +94,7 @@ export function SavedScreen() {
         </Animated.View>
 
         {bought.length > 0 ? (
-          <Animated.View entering={rise(2)} style={styles.bought}>
+          <Animated.View entering={rise(2)}>
             <BoughtSection items={bought} currency={currency} />
           </Animated.View>
         ) : null}
@@ -112,21 +111,20 @@ export function SavedScreen() {
   );
 }
 
+const hairline = { borderColor: colors.border.strong } as const;
+
 const styles = StyleSheet.create({
-  // Figma: content at y 62 (status bar 54 + 8), sections 16 apart.
-  content: { gap: 16 },
-  header: { marginTop: 8, gap: 4 },
-  section: { gap: 16 },
-  list: { gap: 10 },
-  bought: { marginTop: 12 },
+  content: { gap: 32 },
+  // The serif title sits where Home's does (Home has a 14pt date caption + 10 above its title).
+  header: { paddingTop: 8 },
+  title: { marginTop: 24, marginBottom: 4 },
+  section: { gap: 10 },
+  list: { ...hairline, borderBottomWidth: StyleSheet.hairlineWidth },
   empty: {
-    gap: 4,
-    paddingHorizontal: 24,
-    paddingVertical: 22,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: colors.plum300,
-    backgroundColor: withAlpha(colors.white, 0.45),
+    ...hairline,
+    gap: 3,
+    paddingVertical: 18,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

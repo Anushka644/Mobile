@@ -49,6 +49,14 @@ export function frozenAgo(item: Pick<Item, 'frozenAt' | 'firstFrozenAt'>, now: n
   return `Frozen ${formatDuration(now - impulseTime(item))} ago`;
 }
 
+/**
+ * The decision screen's mono caption (v2): "Thawed · waited 3 days" — measured from the original
+ * impulse, like frozenAgo.
+ */
+export function thawedCaption(item: Pick<Item, 'frozenAt' | 'firstFrozenAt'>, now: number): string {
+  return `Thawed · waited ${formatDuration(now - impulseTime(item))}`;
+}
+
 /** "Felt hyped · late-night scroll" (or "Late-night scroll" without a mood). */
 export function moodLine(item: Pick<Item, 'mood' | 'frozenAt' | 'firstFrozenAt'>): string {
   const phrase = timeOfDayPhrase(impulseTime(item));

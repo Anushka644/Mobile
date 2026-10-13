@@ -1,7 +1,7 @@
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, CATEGORY_ICONS, FRAME_WIDTH, GUTTER, Icon } from '@/components';
-import { colors, radius, withAlpha } from '@/theme/tokens';
+import { AppText, CATEGORY_ICONS, Icon } from '@/components';
+import { colors } from '@/theme/tokens';
 
 import { InsightCard } from './InsightCard';
 import type { CategoryTile } from './insightsModel';
@@ -11,65 +11,53 @@ export interface CategoryGridProps {
   tiles: CategoryTile[];
 }
 
-const GAP = 11;
-/** InsightCard horizontal padding. */
-const CARD_PADDING = 20;
+/** Icon column width; separators start where the text does (iOS grouped-list style). */
+const ICON = 20;
+const PAD = 16;
+const ICON_GAP = 14;
 
 /**
- * "By category": a 2-column grid of soft tinted tiles — the category icon in a white disc, the
- * name, then "3 wants · $412" (every want in that category, whatever its status).
+ * "By category" (v2): a quiet white card listing each kind — a monochrome line icon, the name, and
+ * "3 wants · $412" on the right (every want in that category, whatever its status) — with hairline
+ * separators. Biggest spend first.
  */
 export function CategoryGrid({ tiles }: CategoryGridProps) {
-  const { width } = useWindowDimensions();
-  const inner = Math.min(width, FRAME_WIDTH) - GUTTER * 2 - CARD_PADDING * 2;
-  const tileWidth = Math.floor((inner - GAP) / 2);
   return (
-    <InsightCard title="By category" subtitle="Everything you froze, by kind" testID="insights-categories">
-      <View style={styles.grid}>
-        {tiles.map((tile) => {
-          const swatch = CATEGORY_SWATCH[tile.category];
-          return (
-            <View
-              key={tile.category}
-              style={[styles.tile, { width: tileWidth, backgroundColor: swatch.tint }]}
-              accessible
-              accessibilityLabel={`${tile.name}: ${tile.detail}`}
-              testID={`category-${tile.category}`}
-            >
-              <View style={styles.disc}>
-                <Icon name={CATEGORY_ICONS[tile.category]} size={20} color={swatch.ink} strokeWidth={2.2} />
-              </View>
-              <View style={styles.text}>
-                <AppText variant="titleS" numberOfLines={1}>
-                  {tile.name}
-                </AppText>
-                <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1}>
-                  {tile.detail}
-                </AppText>
-              </View>
-            </View>
-          );
-        })}
-      </View>
+    <InsightCard title="By category" subtitle="Everything you froze, by kind" surface="card" testID="insights-categories">
+      {tiles.map((tile, i) => (
+        <View
+          key={tile.category}
+          style={styles.row}
+          accessible
+          accessibilityLabel={`${tile.name}: ${tile.detail}`}
+          testID={`category-${tile.category}`}
+        >
+          <Icon name={CATEGORY_ICONS[tile.category]} size={ICON} color={CATEGORY_SWATCH[tile.category].ink} />
+          <View style={[styles.body, i > 0 ? styles.separator : null]}>
+            <AppText variant="labelM" numberOfLines={1} style={styles.name}>
+              {tile.name}
+            </AppText>
+            <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1} tabular>
+              {tile.detail}
+            </AppText>
+          </View>
+        </View>
+      ))}
     </InsightCard>
   );
 }
 
 const styles = StyleSheet.create({
-  grid: { marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
-  tile: {
-    borderRadius: radius.md,
-    padding: 14,
-    gap: 12,
-  },
-  disc: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.bg.surface,
+  row: { flexDirection: 'row', alignItems: 'center', gap: ICON_GAP, paddingLeft: PAD },
+  body: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: `0px 4px 10px -4px ${withAlpha(colors.plum900, 0.12)}`,
+    justifyContent: 'space-between',
+    gap: 12,
+    minHeight: 52,
+    paddingRight: PAD,
   },
-  text: { gap: 1 },
+  separator: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border.strong },
+  name: { flexShrink: 1 },
 });

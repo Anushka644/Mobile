@@ -1,41 +1,30 @@
-// Let-go celebration (spec §4.6, design/exports/04-let-go@2x.png).
+// Let-go celebration (spec §4.6, restyled per docs/DESIGN_SYSTEM_V2.md "Let go").
 //
-// Glow preset `letGo`: mint100 → cream frame gradient, butter100 top glow and a very diffuse mint500
-// glow behind the jar. Sequence (~2.4s):
-//   0ms     the thawed product sits where it was on the decision screen; the jar starts rising from
-//           the bottom (spring)
-//   480ms   burst: the product fades and shrinks while 10 coins pop outward from its centre
-//           (haptics.heavy); "+$140" pops in and counts up; sparkles twinkle in
-//   ~1.9s   the coins drop into the jar mouth: the jar gulps (squash + spring), new coin rows drop
-//           in, and the total / goal progress count from the old values to the new ones
-// "Back to my freezer" (Primary) and "See my jar" (Ghost) sit 24pt above the bottom edge.
-// Reduced motion: no burst, everything shows in its final state with fades (spec §5).
+// Frost wash (glow preset `letGo`). "YOU LET GO OF THE MUSHROOM LAMP" over a serif "Let go. Nice.",
+// then the stage: the clear tile, and below it the savings glass at the level it had before.
+// Sequence (~2.2s):
+//   0ms      the headline, the tile and the glass settle in
+//   480ms    droplets start to slip out from under the tile, one by one (haptics.heavy), and fall
+//            into the glass; the tile eases back a little as it gives up its water
+//   +560ms   the first drop lands: the water starts to rise and "+$65" counts up in Geist Light
+//   +1460ms  the last drop lands (haptics.tap): the total and the goal line count to the new values
+// One ink "Done" button sits 24pt above the bottom edge.
+// Reduced motion: no droplets, everything shows in its final state with fades (spec §5).
 
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
+  Easing,
   FadeIn,
   FadeInDown,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
-import {
-  AppText,
-  Button,
-  CoinBurst,
-  ItemCube,
-  Jar,
-  jarLevel,
-  Screen,
-  springPop,
-  useReducedMotion,
-} from '@/components';
+import { AppText, Button, ItemCube, Jar, jarLevel, Screen, timingFade, useReducedMotion } from '@/components';
 import { haptics } from '@/lib/haptics';
 import { formatMoney } from '@/lib/money';
 import { selectItem, selectLetGo, selectSavedCents } from '@/store/selectors';
@@ -43,34 +32,30 @@ import { useChillStore } from '@/store/useChillStore';
 import { colors } from '@/theme/tokens';
 import type { Goal, Item } from '@/types';
 
-import { GoalProgressCard } from '../saved/GoalProgressCard';
 import { goalPercentLabel, goalToGoCaption, meltedAwayCaption, savedSoFar } from '../saved/savedCopy';
 import { itemNoun } from '../thawed/thawedCopy';
-import { Twinkle } from './Twinkle';
+import { DropletFall, dropletTimeline, DROP_STAGGER_MS } from './DropletFall';
+import { LetGoTotal } from './LetGoTotal';
 import { useCountUp } from './useCountUp';
 
-const JAR_W = 220;
-const JAR_H = 262;
-const JAR_W_COMPACT = 180;
-/** Figma stage: headline bottom (218) → jar bottom (562). */
-const STAGE_H = 344;
-const STAGE_H_COMPACT = 286;
+/** Stage geometry, regular and compact (screens under 760pt). */
+const STAGE = {
+  regular: { tile: 104, gap: 44, glass: 188, drop: 16, drops: 7 },
+  compact: { tile: 76, gap: 30, glass: 140, drop: 13, drops: 6 },
+} as const;
 const COMPACT_HEIGHT = 760;
-/** Thawed product cube (its product's centre sits at 0.63 of the box). */
-const CUBE = 160;
-const CUBE_PRODUCT_CY = 0.63;
-/**
- * The product (and the burst) centre, relative to the jar's top edge: about where the lid will be.
- * The jar is still below the screen while the product shows, then rises in under the coins.
- */
-const PRODUCT_BELOW_JAR_TOP = 12;
 
-const BURST_AT = 420;
-/** The jar starts rising just before the burst and is in place before the coins start to fall. */
-const JAR_RISE_AT = 340;
-const JAR_RISE = { damping: 16, stiffness: 150, mass: 0.9 } as const;
+// The glass's design box (see Jar): 220 × 262, the glass 250 tall from 6pt down, water up to 90%.
+const JAR_BOX_W = 220;
+const JAR_BOX_H = 262;
+const JAR_GLASS_TOP = 6;
+const JAR_GLASS_H = 250;
+const JAR_MAX_FILL = 0.9;
 
-type Phase = 'intro' | 'burst' | 'landed';
+/** When the droplets start, after the screen opens. */
+const DRIP_AT = 480;
+
+type Phase = 'intro' | 'drip' | 'rising' | 'landed';
 
 export interface LetGoScreenProps {
   id: string;
@@ -120,182 +105,162 @@ function LetGoCelebration({ item }: { item: Item }) {
   const [timelinePhase, setPhase] = useState<Phase>('intro');
   // Reduced motion (even if it turns on mid-sequence): straight to the final state.
   const phase: Phase = reduced ? 'landed' : timelinePhase;
-  const [stage, setStage] = useState<{ w: number; h: number } | null>(null);
 
   const compact = windowH > 0 && windowH < COMPACT_HEIGHT;
-  const jarW = compact ? JAR_W_COMPACT : JAR_W;
-  const jarH = (JAR_H * jarW) / JAR_W;
+  const g = compact ? STAGE.compact : STAGE.regular;
+  const k = g.glass / JAR_BOX_W;
+  const glassH = JAR_BOX_H * k;
+  const glassTop = g.tile + g.gap;
+  const stageH = glassTop + glassH;
+  const { firstLand, lastLand } = dropletTimeline(g.drops);
 
   // --- timeline --------------------------------------------------------------------------------
-  const rise = useSharedValue(0);
-  const product = useSharedValue(0);
-  const gone = useSharedValue(0);
-  const amount = useSharedValue(0);
-  const gulp = useSharedValue(0);
+  useEffect(() => {
+    if (reduced) return;
+    const ids = [
+      setTimeout(() => setPhase('drip'), DRIP_AT),
+      setTimeout(() => setPhase('rising'), DRIP_AT + firstLand),
+      setTimeout(() => setPhase('landed'), DRIP_AT + lastLand),
+    ];
+    return () => ids.forEach(clearTimeout);
+  }, [reduced, firstLand, lastLand]);
 
+  const hapticsDone = useRef<Phase | null>(null);
+  useEffect(() => {
+    if (reduced || hapticsDone.current === phase) return;
+    hapticsDone.current = phase;
+    if (phase === 'drip') haptics.heavy();
+    if (phase === 'landed') haptics.tap();
+  }, [phase, reduced]);
+
+  // The tile gives up its water: it eases back while the drops fall.
+  const give = useSharedValue(0);
+  const amountIn = useSharedValue(reduced ? 1 : 0);
   useEffect(() => {
     if (reduced) {
-      rise.set(withTiming(1, { duration: 420 }));
-      amount.set(withTiming(1, { duration: 220 }));
+      amountIn.set(withTiming(1, timingFade));
       return;
     }
-    product.set(withSpring(1, springPop));
-    rise.set(withDelay(JAR_RISE_AT, withSpring(1, JAR_RISE)));
-    const id = setTimeout(() => setPhase('burst'), BURST_AT);
-    return () => clearTimeout(id);
-  }, [reduced, product, rise, amount]);
+    if (phase === 'drip') {
+      give.set(withTiming(1, { duration: lastLand, easing: Easing.inOut(Easing.quad) }));
+    }
+    if (phase === 'rising') amountIn.set(withTiming(1, { duration: 260 }));
+  }, [phase, reduced, give, amountIn]);
 
-  useEffect(() => {
-    if (phase !== 'burst') return;
-    gone.set(withTiming(1, { duration: 320 }));
-    amount.set(withSpring(1, springPop));
-  }, [phase, gone, amount]);
-
-  const landed = useRef(false);
-  const onLanded = () => {
-    if (landed.current) return;
-    landed.current = true;
-    haptics.tap();
-    gulp.set(withSequence(withTiming(1, { duration: 90 }), withSpring(0, { damping: 9, stiffness: 260 })));
-    setPhase('landed');
-  };
+  const tileStyle = useAnimatedStyle(() => {
+    const v = give.get();
+    return { transform: [{ translateY: -4 * v }, { scale: 1 - 0.08 * v }] };
+  });
+  const amountStyle = useAnimatedStyle(() => {
+    const a = amountIn.get();
+    return { opacity: a, transform: [{ translateY: (1 - a) * 8 }] };
+  });
 
   // --- numbers ---------------------------------------------------------------------------------
-  const counted = useCountUp(item.priceCents, { start: phase !== 'intro', duration: 950 });
+  const rising = phase === 'rising' || phase === 'landed';
+  const counted = useCountUp(item.priceCents, { start: rising, duration: lastLand - firstLand + 200 });
   const amountText = `+${formatMoney(counted, item.currency, counted === item.priceCents ? {} : { decimals: 'never' })}`;
   const total = useCountUp(n.saved, { from: n.prevSaved, start: phase === 'landed', duration: 700 });
   // Whole units while counting ("$994"), exact cents before and after.
   const totalCents = total === n.saved || total === n.prevSaved ? total : Math.round(total / 100) * 100;
   const pct = n.goal ? Math.min(100, (totalCents / n.goal.targetCents) * 100) : null;
-  const totalText = savedSoFar(totalCents, n.currency);
 
-  // --- geometry (stage coordinates) ----------------------------------------------------------
-  const onStageLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    setStage({ w: width, h: height });
+  // --- geometry (stage px) -----------------------------------------------------------------------
+  const [stageW, setStageW] = useState(353);
+  const cx = stageW / 2;
+  /** The water surface in stage px at a level 0..1. */
+  const surfaceY = (level: number) => glassTop + (JAR_GLASS_TOP + JAR_GLASS_H * (1 - level * JAR_MAX_FILL)) * k;
+  // The water starts rising as the first drop lands; later drops meet it a little higher.
+  const landY = (i: number) => {
+    const t = Math.min(1, (i * DROP_STAGGER_MS) / (lastLand - firstLand || 1));
+    return surfaceY(n.prevLevel + (n.level - n.prevLevel) * t) + 2;
   };
-  const w = stage?.w ?? 353;
-  const h = stage?.h ?? (compact ? STAGE_H_COMPACT : STAGE_H);
-  const jarTop = h - jarH;
-  const productCy = jarTop + PRODUCT_BELOW_JAR_TOP * (jarW / JAR_W);
-  const origin = { x: w / 2, y: productCy };
-  const target = { x: w / 2, y: jarTop + 34 * (jarW / JAR_W) };
 
-  // --- animated styles -------------------------------------------------------------------------
-  // The jar starts a full screen lower, so it rises in from below the bottom edge.
-  const riseFrom = Math.max(windowH, 700) + 40;
-  const jarStyle = useAnimatedStyle(() => {
-    if (reduced) return { opacity: rise.get() };
-    const g = gulp.get();
-    return {
-      transform: [{ translateY: (1 - rise.get()) * riseFrom }, { scaleX: 1 + 0.05 * g }, { scaleY: 1 - 0.06 * g }],
-    };
-  });
-  const productStyle = useAnimatedStyle(() => {
-    const p = product.get();
-    const g = gone.get();
-    return {
-      opacity: Math.min(1, p * 1.5) * (1 - g),
-      transform: [{ scale: (0.88 + 0.12 * p) * (1 - 0.65 * g) }],
-    };
-  });
-  const amountStyle = useAnimatedStyle(() => {
-    const a = amount.get();
-    return { opacity: Math.min(1, a * 1.6), transform: [{ scale: 0.6 + 0.4 * a }] };
-  });
-
-  const enter = (delay: number) => (reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(17));
-  const sparklesOn = phase !== 'intro';
+  const enter = (delay: number) =>
+    reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(20).stiffness(170);
 
   return (
-    <Screen scroll glow="letGo" contentStyle={styles.content}>
-      <View style={styles.headline} testID="let-go-headline">
-        <Animated.View entering={reduced ? FadeIn.duration(220) : FadeIn.duration(260)} style={styles.headText}>
-          <AppText variant="caption" color={colors.text.success} align="center" numberOfLines={2}>
-            You let go of the {itemNoun(item.name)}
-          </AppText>
-          <AppText variant="displayL" align="center" accessibilityRole="header">
-            Let go. Nice.
-          </AppText>
+    <Screen
+      scroll
+      glow="letGo"
+      contentStyle={styles.content}
+      testID="let-go"
+      footer={
+        <Animated.View entering={enter(reduced ? 0 : DRIP_AT + lastLand - 200)}>
+          <Button label="Done" onPress={() => router.dismissTo('/')} testID="let-go-home" />
         </Animated.View>
-        <Animated.View style={amountStyle}>
-          <AppText
-            variant="numericXL"
-            color={colors.text.success}
-            align="center"
-            tabular
-            accessibilityLabel={`Plus ${formatMoney(item.priceCents, item.currency)}`}
-            testID="let-go-amount"
-          >
-            {amountText}
-          </AppText>
-        </Animated.View>
-      </View>
-
-      <View
-        style={[styles.stage, { minHeight: compact ? STAGE_H_COMPACT : STAGE_H }]}
-        onLayout={onStageLayout}
-        testID="let-go-stage"
+      }
+    >
+      <Animated.View
+        entering={FadeIn.duration(reduced ? 220 : 320)}
+        style={[styles.headline, compact ? styles.headlineCompact : null]}
+        testID="let-go-headline"
       >
-        <Animated.View
-          style={[styles.abs, styles.jarOrigin, { left: (w - jarW) / 2, top: jarTop, width: jarW }, jarStyle]}
-        >
-          <Jar level={phase === 'landed' ? n.level : n.prevLevel} width={jarW} />
-        </Animated.View>
-
-        {!reduced ? (
-          <Animated.View
-            style={[styles.abs, { left: w / 2 - CUBE / 2, top: productCy - CUBE * CUBE_PRODUCT_CY }, productStyle]}
-          >
-            <ItemCube item={item} progress={1} thawed size={CUBE} />
-          </Animated.View>
-        ) : null}
-
-        <CoinBurst
-          trigger={phase === 'intro' ? 0 : 1}
-          origin={origin}
-          target={target}
-          count={10}
-          coinSize={34}
-          onBurst={() => haptics.heavy()}
-          onLanded={onLanded}
-        />
-
-        {/* Figma sparkles: around the amount, offsets from the column centre. */}
-        <Twinkle visible={sparklesOn} size={22} delay={60} style={{ left: w / 2 - 116.5, top: -30 }} />
-        <Twinkle visible={sparklesOn} size={18} delay={160} style={{ left: w / 2 + 115.5, top: 12 }} />
-        <Twinkle visible={sparklesOn} size={14} delay={260} style={{ left: w / 2 + 29.5, top: -44 }} />
-      </View>
-
-      <Animated.View entering={enter(reduced ? 0 : 700)} style={styles.card}>
-        {n.goal ? (
-          <GoalProgressCard
-            title={totalText}
-            titleVariant="labelL"
-            trailing={pct != null ? goalPercentLabel(pct) : undefined}
-            progress={pct != null ? pct / 100 : null}
-            animated={phase === 'landed' && !reduced}
-            caption={goalToGoCaption(n.goal, totalCents, n.currency)}
-            elevation="soft"
-            accessibilityLabel={`${savedSoFar(n.saved, n.currency)}. ${goalToGoCaption(n.goal, n.saved, n.currency)}`}
-            testID="let-go-goal"
-          />
-        ) : (
-          <GoalProgressCard
-            title={totalText}
-            titleVariant="labelL"
-            progress={null}
-            caption={meltedAwayCaption(n.letGoCount)}
-            elevation="soft"
-            accessibilityLabel={`${savedSoFar(n.saved, n.currency)}, ${meltedAwayCaption(n.letGoCount)}`}
-            testID="let-go-goal"
-          />
-        )}
+        <AppText variant="caption" color={colors.text.secondary} align="center" numberOfLines={2}>
+          You let go of the {itemNoun(item.name)}
+        </AppText>
+        <AppText variant="displayL" align="center" accessibilityRole="header">
+          Let go. Nice.
+        </AppText>
       </Animated.View>
 
-      <Animated.View entering={enter(reduced ? 0 : 860)} style={styles.actions}>
-        <Button label="Back to my freezer" onPress={() => router.dismissTo('/')} testID="let-go-home" />
-        <Button label="See my jar" variant="ghost" fullWidth onPress={() => router.dismissTo('/saved')} />
+      <Animated.View
+        entering={FadeIn.duration(reduced ? 220 : 420)}
+        style={[styles.stage, { height: stageH, marginTop: compact ? 20 : 36 }]}
+        onLayout={(e) => setStageW(e.nativeEvent.layout.width)}
+        testID="let-go-stage"
+      >
+        <View style={[styles.abs, { left: cx - g.glass / 2, top: glassTop }]}>
+          <Jar level={rising ? n.level : n.prevLevel} width={g.glass} />
+        </View>
+
+        {!reduced ? (
+          <DropletFall
+            start={phase !== 'intro'}
+            from={{ x: cx, y: g.tile - 6 }}
+            spread={g.tile * 0.2}
+            landY={landY}
+            count={g.drops}
+            size={g.drop}
+          />
+        ) : null}
+
+        <Animated.View style={[styles.abs, { left: cx - g.tile / 2, top: 0 }, tileStyle]}>
+          <ItemCube
+            item={item}
+            progress={1}
+            thawed
+            size={g.tile}
+            radius={Math.round(g.tile * 0.2)}
+            animated={false}
+          />
+        </Animated.View>
+      </Animated.View>
+
+      <Animated.View style={[styles.amount, amountStyle]}>
+        <AppText
+          variant={compact ? 'numericL' : 'numericXL'}
+          align="center"
+          tabular
+          accessibilityLabel={`Plus ${formatMoney(item.priceCents, item.currency)}`}
+          testID="let-go-amount"
+        >
+          {amountText}
+        </AppText>
+      </Animated.View>
+
+      <Animated.View entering={enter(reduced ? 0 : 240)} style={compact ? styles.totalCompact : styles.total}>
+        <LetGoTotal
+          title={savedSoFar(totalCents, n.currency)}
+          trailing={pct != null ? goalPercentLabel(pct) : undefined}
+          progress={pct != null ? pct / 100 : null}
+          animated={phase === 'landed' && !reduced}
+          caption={n.goal ? goalToGoCaption(n.goal, totalCents, n.currency) : meltedAwayCaption(n.letGoCount)}
+          accessibilityLabel={`${savedSoFar(n.saved, n.currency)}. ${
+            n.goal ? goalToGoCaption(n.goal, n.saved, n.currency) : meltedAwayCaption(n.letGoCount)
+          }`}
+          testID="let-go-goal"
+        />
       </Animated.View>
     </Screen>
   );
@@ -303,14 +268,11 @@ function LetGoCelebration({ item }: { item: Item }) {
 
 const styles = StyleSheet.create({
   content: { alignItems: 'stretch' },
-  // Figma: headline at y 92 (status bar 54 + 38): caption, 4, Display/L, 4, Numeric/XL.
-  headline: { marginTop: 38, alignItems: 'center', gap: 4, zIndex: 1 },
-  headText: { alignItems: 'center', gap: 4, paddingHorizontal: 8 },
-  // Grows on tall screens so the CTAs stay anchored 24pt above the bottom edge. Above the headline:
-  // coins and sparkles fly over the amount (as in Figma's layer order).
-  stage: { flexGrow: 1, zIndex: 2 },
+  headline: { marginTop: 28, alignItems: 'center', gap: 10, paddingHorizontal: 8 },
+  headlineCompact: { marginTop: 12, gap: 6 },
+  stage: { alignSelf: 'stretch' },
   abs: { position: 'absolute' },
-  jarOrigin: { transformOrigin: '50% 100%' },
-  card: { marginTop: 24, zIndex: 3 },
-  actions: { marginTop: 20, gap: 4, zIndex: 3 },
+  amount: { marginTop: 14 },
+  total: { marginTop: 28 },
+  totalCompact: { marginTop: 16 },
 });

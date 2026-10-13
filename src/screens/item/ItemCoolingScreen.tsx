@@ -1,36 +1,41 @@
-// Item — cooling (spec §4.4, design/exports/02-item-cooling@2x.png).
+// Item — cooling (spec §4.4, restyled per docs/DESIGN_SYSTEM_V2.md "Item cooling").
 //
-// Backdrop: glow preset `item` (lavender100 top glow over the ice gradient) + drifting snow dots.
-// Nav: Glass back · "Frozen 2 days ago" · Glass open-link (hidden without a url). Hero: the melting
-// Cube (230, idle breathing). Countdown + melt bar + caption. Details card, ReflectionCard, and a
-// Ghost "Thaw it early" (with a confirm dialog) resting 24pt above the bottom edge.
-// When the item thaws while this screen is open, the cube thaws in place and the screen replaces
-// itself with /thawed/[id].
+// Frost wash at the top (glow preset `item`). Nav: glass back · "FROZEN 2 DAYS AGO" · glass
+// open-link (hidden without a url). Hero: the frost tile (260), its frost line sinking as the want
+// melts. Countdown: mono "THAWS IN", the time left in Geist Light, a thin ice melt line as wide as
+// the tile and its two-ended readout. Then the name and price, the reflection, the details as
+// hairline key / value rows, and a ghost "Thaw it early" (with a confirm dialog) 24pt above the
+// bottom edge. When the item thaws while this screen is open, the tile clears in place and the
+// screen replaces itself with /thawed/[id].
 
 import { Redirect, useIsFocused, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
+import { Linking, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 
-import { Button, ConfirmDialog, ItemCube, ReflectionCard, Screen, SnowField } from '@/components';
+import { Button, ConfirmDialog, ItemCube, ReflectionCard, Screen } from '@/components';
 import { useNow } from '@/lib/clock';
-import { openableUrl } from '@/lib/url';
 import { haptics } from '@/lib/haptics';
 import { isReady, meltProgress, timeLeftMs } from '@/lib/melt';
 import { cancelNotification } from '@/lib/notifications';
+import { openableUrl } from '@/lib/url';
 import { selectItem } from '@/store/selectors';
 import { useChillStore } from '@/store/useChillStore';
 import type { Item } from '@/types';
 
 import { CountdownHero } from './CountdownHero';
-import { ItemDetailsCard } from './ItemDetailsCard';
+import { ItemDetails, ItemTitle } from './ItemDetails';
 import { ItemNavBar } from './ItemNavBar';
 import { frozenLabel } from './itemCopy';
 import { useReflectionPrompt } from './useReflectionPrompt';
 
-/** Hero cube box (the Figma body is ~164 wide at 58% melted). */
-const CUBE_SIZE = 230;
-/** Let the cube's thaw (ice fades, sparkles pop: ~650ms) play before the thawed screen takes over. */
+/** Hero tile (square); shorter screens get a smaller one so the countdown stays above the fold. */
+const TILE = 260;
+const TILE_COMPACT = 216;
+const COMPACT_HEIGHT = 760;
+/** Same corner ratio as the freezer grid tiles (ItemCard: 16% of the width). */
+const TILE_RADIUS_RATIO = 0.16;
+/** Let the tile's thaw (the frost clears: ~900ms) play before the thawed screen takes over. */
 const THAW_BEAT_MS = 750;
 
 export interface ItemCoolingScreenProps {
@@ -47,6 +52,7 @@ function ItemCooling({ item }: { item: Item }) {
   const router = useRouter();
   const focused = useIsFocused();
   const reduced = useReducedMotion();
+  const { height } = useWindowDimensions();
   const thawEarly = useChillStore((s) => s.thawEarly);
   const setNotificationId = useChillStore((s) => s.setNotificationId);
   const now = useNow(1000);
@@ -67,6 +73,7 @@ function ItemCooling({ item }: { item: Item }) {
   const thawed = thawing || ready;
   const progress = thawed ? 1 : meltProgress(item, now);
   const url = openableUrl(item.url);
+  const tile = height > 0 && height < COMPACT_HEIGHT ? TILE_COMPACT : TILE;
 
   /** Replace this screen with the thawed decision, after an optional beat for the thaw animation. */
   const goThawed = (delay: number) => {
@@ -95,17 +102,19 @@ function ItemCooling({ item }: { item: Item }) {
     goThawed(reduced ? 250 : THAW_BEAT_MS);
   };
 
+  const enter = (delay: number) =>
+    reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(20).stiffness(170);
+
   return (
     <Screen
       glow="item"
       scroll
       testID="item-cooling"
-      // Ghost "Thaw it early" rests 24pt above the bottom edge; longer content scrolls under a cream fade.
+      // Ghost "Thaw it early" rests 24pt above the bottom edge; longer content scrolls under a paper fade.
       footerFade
       footer={
         <Button
           label="Thaw it early"
-          icon="hourglass"
           variant="ghost"
           disabled={thawed}
           onPress={() => setConfirming(true)}
@@ -113,8 +122,6 @@ function ItemCooling({ item }: { item: Item }) {
         />
       }
     >
-      <SnowField height={420} count={10} seed={5} style={styles.snow} />
-
       <ItemNavBar
         title={frozenLabel(item, now)}
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
@@ -122,7 +129,13 @@ function ItemCooling({ item }: { item: Item }) {
       />
 
       <View style={styles.hero}>
-        <ItemCube item={item} progress={progress} thawed={thawed} size={CUBE_SIZE} />
+        <ItemCube
+          item={item}
+          progress={progress}
+          thawed={thawed}
+          size={tile}
+          radius={Math.round(tile * TILE_RADIUS_RATIO)}
+        />
       </View>
 
       <CountdownHero
@@ -131,17 +144,21 @@ function ItemCooling({ item }: { item: Item }) {
         thawAt={item.thawAt}
         now={now}
         thawed={thawed}
+        width={tile}
         style={styles.countdown}
       />
 
-      <Animated.View entering={FadeInDown.delay(60).springify().damping(18).stiffness(180)} style={styles.details}>
-        <ItemDetailsCard item={item} />
+      <Animated.View entering={enter(40)} style={styles.title}>
+        <ItemTitle item={item} />
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(120).springify().damping(18).stiffness(180)} style={styles.reflection}>
+      <Animated.View entering={enter(90)} style={styles.reflection}>
         <ReflectionCard prompt={reflection.prompt} onNext={reflection.next} testID="item-reflection" />
       </Animated.View>
 
+      <Animated.View entering={enter(140)} style={styles.details}>
+        <ItemDetails item={item} />
+      </Animated.View>
 
       <ConfirmDialog
         visible={confirming}
@@ -159,10 +176,9 @@ function ItemCooling({ item }: { item: Item }) {
 }
 
 const styles = StyleSheet.create({
-  // The cube box starts just under the nav (its top quarter is empty at mid-melt).
-  hero: { alignItems: 'center', marginTop: -4 },
-  countdown: { marginTop: -10 },
-  details: { marginTop: 18 },
-  reflection: { marginTop: 15 },
-  snow: { top: 40 },
+  hero: { alignItems: 'center', marginTop: 20 },
+  countdown: { marginTop: 32 },
+  title: { marginTop: 44 },
+  reflection: { marginTop: 24 },
+  details: { marginTop: 32 },
 });

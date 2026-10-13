@@ -96,8 +96,8 @@ function GoalForm({ goal, currency, savedCents, onDone }: GoalFormProps) {
       />
       {progress != null && savedCents > 0 ? (
         <View style={styles.progress}>
-          <ProgressBar progress={progress} tone="mint" height={10} />
-          <AppText variant="bodyS" color={colors.text.secondary}>
+          <ProgressBar progress={progress} tone="mint" height={4} />
+          <AppText variant="bodyS" color={colors.text.secondary} tabular>
             {formatMoney(savedCents, currency)} saved · {Math.round(progress * 100)}% of the way
           </AppText>
         </View>
@@ -105,7 +105,6 @@ function GoalForm({ goal, currency, savedCents, onDone }: GoalFormProps) {
       <View style={styles.actions}>
         <Button
           label={goal ? 'Save goal' : 'Set goal'}
-          icon="check"
           onPress={save}
           disabled={!parsed}
           testID="goal-save"
@@ -128,6 +127,6 @@ function GoalForm({ goal, currency, savedCents, onDone }: GoalFormProps) {
 
 const styles = StyleSheet.create({
   form: { gap: 16 },
-  progress: { gap: 8 },
-  actions: { gap: 4, marginTop: 4 },
+  progress: { gap: 10, paddingTop: 4 },
+  actions: { gap: 4, marginTop: 8 },
 });

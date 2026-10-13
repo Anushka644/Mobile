@@ -25,7 +25,8 @@ export interface BoughtSectionProps {
 
 /**
  * "You bought" (spec §4.7): a collapsible, neutral list of the wants you decided to buy, newest
- * first. The header shows the count and total spent in plain plum — no judgement, no red.
+ * first — the same hairline rows as "Melted away". The header shows the count and total spent in
+ * quiet mono: no judgement, no red.
  */
 export function BoughtSection({ items, currency, initiallyOpen = false }: BoughtSectionProps) {
   const reduced = useReducedMotion();
@@ -54,13 +55,13 @@ export function BoughtSection({ items, currency, initiallyOpen = false }: Bought
         accessibilityLabel={`You bought, ${summary}`}
         testID="saved-bought-toggle"
       >
-        <AppText variant="titleM">You bought</AppText>
+        <AppText variant="titleS">You bought</AppText>
         <View style={styles.trailing}>
-          <AppText variant="labelS" color={colors.text.secondary}>
+          <AppText variant="caption" color={colors.text.tertiary}>
             {summary}
           </AppText>
           <Animated.View style={chevronStyle}>
-            <Icon name="chevron-down" size={18} color={colors.text.secondary} />
+            <Icon name="chevron-down" size={16} color={colors.text.tertiary} />
           </Animated.View>
         </View>
       </Pressable>
@@ -75,7 +76,7 @@ export function BoughtSection({ items, currency, initiallyOpen = false }: Bought
               <HistoryRow item={item} testID={`bought-${item.id}`} />
             </Animated.View>
           ))}
-          <AppText variant="bodyS" color={colors.text.tertiary} align="center" style={styles.note}>
+          <AppText variant="bodyS" color={colors.text.tertiary} style={styles.note}>
             Still wanted after the wait — that’s a good buy.
           </AppText>
         </View>
@@ -85,9 +86,13 @@ export function BoughtSection({ items, currency, initiallyOpen = false }: Bought
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 16 },
+  section: { gap: 4 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44 },
   trailing: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  list: { gap: 10 },
-  note: { marginTop: 4 },
+  list: {},
+  note: {
+    paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border.strong,
+  },
 });

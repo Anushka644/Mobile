@@ -1,76 +1,40 @@
-import { BlurView } from 'expo-blur';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { AppText, Icon, MOOD_ICONS, MOOD_INK, MOOD_TINT } from '@/components';
+import { AppText } from '@/components';
 import { formatMoney } from '@/lib/money';
-import { colors, radius, withAlpha } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 import type { Item } from '@/types';
 
-import { claySoft } from '../saved/clay';
 import { frozenAgo, moodLine } from './thawedCopy';
-
-const CAN_BLUR = Platform.OS === 'ios' || Platform.OS === 'web';
 
 export interface ContextCardProps {
   item: Item;
   now: number;
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
- * Thawed context card (spec §4.5, Figma "Context"): frosted white pill-card, r28, padding 16, gap 12.
- * A 44 mood circle, "Frozen 3 days ago" (Label/M) over "Felt hyped · late-night scroll" (Body/S
- * plum500), and the price (Numeric/M) on the right.
+ * The decision's one line of context (v2): what you felt when you froze it — "Felt hyped ·
+ * afternoon break" in quiet Body/M, centred under the question. No card, no mood badge; screen
+ * readers also hear when it was frozen and the price.
  */
-export function ContextCard({ item, now }: ContextCardProps) {
-  const frozen = frozenAgo(item, now);
+export function ContextCard({ item, now, style }: ContextCardProps) {
   const line = moodLine(item);
   const price = formatMoney(item.priceCents, item.currency);
   return (
     <View
-      style={[styles.card, claySoft]}
+      style={[styles.wrap, style]}
       accessible
-      accessibilityLabel={`${frozen}. ${line}. ${price}.`}
+      accessibilityLabel={`${frozenAgo(item, now)}. ${line}. ${price}.`}
       testID="thawed-context"
     >
-      <View style={[StyleSheet.absoluteFill, styles.clip]}>
-        {CAN_BLUR ? <BlurView intensity={24} tint="light" style={StyleSheet.absoluteFill} /> : null}
-        <View style={[StyleSheet.absoluteFill, styles.fill]} />
-      </View>
-      <View style={[styles.mood, { backgroundColor: item.mood ? MOOD_TINT[item.mood] : colors.ice100 }]}>
-        <Icon
-          name={item.mood ? MOOD_ICONS[item.mood] : 'clock'}
-          size={22}
-          color={item.mood ? MOOD_INK[item.mood] : colors.ice800}
-        />
-      </View>
-      <View style={styles.text}>
-        <AppText variant="labelM" numberOfLines={1}>
-          {frozen}
-        </AppText>
-        <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1}>
-          {line}
-        </AppText>
-      </View>
-      <AppText variant="numericM" style={styles.price}>
-        {price}
+      <AppText variant="bodyL" color={colors.text.secondary} align="center" numberOfLines={2}>
+        {line}
       </AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 60,
-    borderRadius: radius.lg,
-  },
-  clip: { borderRadius: radius.lg, overflow: 'hidden' },
-  fill: { backgroundColor: withAlpha(colors.white, CAN_BLUR ? 0.82 : 0.94) },
-  mood: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  text: { flex: 1, gap: 2 },
-  price: { marginLeft: 4 },
+  wrap: { alignSelf: 'stretch', paddingHorizontal: 12 },
 });

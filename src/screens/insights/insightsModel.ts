@@ -21,8 +21,8 @@ export const MIN_DECISIONS = 2;
 /** One-letter weekday labels, Monday first (the chart columns). */
 export const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
 
-/** Tallest bar (the busiest weekday) and the stub drawn for an empty day, in pt (from the PNG). */
-export const BAR_MAX_HEIGHT = 76;
+/** Tallest bar (the busiest weekday) and the stub drawn for an empty day (a dot as wide as a bar), in pt. */
+export const BAR_MAX_HEIGHT = 104;
 export const BAR_MIN_HEIGHT = 8;
 
 export interface HeroStat {
@@ -32,7 +32,7 @@ export interface HeroStat {
   title: string;
   /** "That’s $934 you didn’t spend." */
   line: string;
-  /** Share let go, 0..1 (the donut's mint arc). */
+  /** Share let go, 0..1 (the ring's ice arc). */
   letGoShare: number;
   /** "75%". */
   percent: string;
@@ -46,7 +46,7 @@ export interface WeekdayBar {
   count: number;
   /** Bar height in pt (BAR_MIN_HEIGHT … BAR_MAX_HEIGHT). */
   height: number;
-  /** The peak impulse weekday (peakImpulseWindow, count ≥ 2): lavender bar with the hour tooltip. */
+  /** The peak impulse weekday (peakImpulseWindow, count ≥ 2): the ink bar with the hour label. */
   peak: boolean;
 }
 
@@ -89,7 +89,7 @@ export interface InsightsModel {
   weekdays: WeekdayBar[];
   /** "Your peak: Sunday around 11 PM", or a gentle placeholder until a weekday + hour repeats. */
   peakCaption: string;
-  /** "11 PM" tooltip over the peak bar; null until there's a pattern (a slot with 2+ freezes). */
+  /** "11 PM" label over the peak bar; null until there's a pattern (a slot with 2+ freezes). */
   peakHour: string | null;
   moods: MoodRow[];
   categories: CategoryTile[];
@@ -225,7 +225,7 @@ export interface ArcSegment {
 }
 
 /**
- * The keep-rate ring as two arcs from 12 o'clock, clockwise: let-go (mint) then bought (coral),
+ * The keep-rate ring as two arcs from 12 o'clock, clockwise: let-go then bought,
  * each trimmed by half of `gapDeg` at both ends so a thin separator shows between them. A share of
  * 0 or 1 gives one full ring and no gaps. Null for an empty arc.
  */

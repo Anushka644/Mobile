@@ -1,46 +1,51 @@
-// Insights colour pairings (soft tint + ink + bar) per mood and category.
-//
-// Mood tints and inks are the kit's app-wide MOOD_TINT / MOOD_INK (design/exports/06-insights:
-// hyped = coral, bored = butter, stressed = lavender), so a mood looks the same here as on the
-// Thawed context card; Insights only adds the bar fill.
+// Insights colours (v2 "frost minimal"): ink on paper. Charts read by length and order, not by hue,
+// so every mood and category shares one swatch. Ice blue appears once, on the keep-rate bar: the
+// share of wants that melted into water.
 
-import { MOOD_INK, MOOD_TINT } from '@/components';
 import { colors } from '@/theme/tokens';
 import type { Category, Mood } from '@/types';
 
 export interface Swatch {
-  /** Soft background (badge circle, bar track, tile). */
+  /** Quiet fill behind a bar or glyph. */
   tint: string;
-  /** Icon colour on the tint. */
+  /** Glyph / label colour. */
   ink: string;
   /** Bar fill. */
   bar: string;
 }
 
-const MOOD_BAR: Record<Mood, string> = {
-  hyped: colors.coral500,
-  bored: colors.butter500,
-  stressed: colors.lavender500,
-  sad: colors.ice400,
-  need: colors.mint500,
-};
-
-const swatchFor = (mood: Mood): Swatch => ({ tint: MOOD_TINT[mood], ink: MOOD_INK[mood], bar: MOOD_BAR[mood] });
+/** The one swatch: an ink bar on a paper track. */
+const MONO: Swatch = { tint: colors.cream200, ink: colors.plum900, bar: colors.plum900 };
 
 export const MOOD_SWATCH: Record<Mood, Swatch> = {
-  hyped: swatchFor('hyped'),
-  bored: swatchFor('bored'),
-  stressed: swatchFor('stressed'),
-  sad: swatchFor('sad'),
-  need: swatchFor('need'),
+  hyped: MONO,
+  bored: MONO,
+  stressed: MONO,
+  sad: MONO,
+  need: MONO,
 };
 
 export const CATEGORY_SWATCH: Record<Category, Swatch> = {
-  fashion: { tint: colors.coral100, ink: colors.coral500, bar: colors.coral500 },
-  tech: { tint: colors.lavender100, ink: colors.lavender500, bar: colors.lavender500 },
-  home: { tint: colors.butter100, ink: colors.butter600, bar: colors.butter500 },
-  beauty: { tint: colors.coral100, ink: colors.coral300, bar: colors.coral300 },
-  food: { tint: colors.butter100, ink: colors.butter600, bar: colors.butter500 },
-  fun: { tint: colors.mint100, ink: colors.mint700, bar: colors.mint500 },
-  other: { tint: colors.ice100, ink: colors.ice800, bar: colors.ice400 },
+  fashion: MONO,
+  tech: MONO,
+  home: MONO,
+  beauty: MONO,
+  food: MONO,
+  fun: MONO,
+  other: MONO,
 };
+
+/** Chart roles. */
+export const CHART = {
+  /** Weekday bars. */
+  bar: colors.cream300,
+  /** The peak weekday bar and its label. */
+  peak: colors.plum900,
+  /** Mood bar tracks. */
+  track: colors.cream200,
+  /** Keep-rate split bar: the share let go (melted into water) and the share bought. */
+  letGo: colors.ice600,
+  bought: colors.cream300,
+  /** Chart baselines. */
+  rule: colors.border.strong,
+} as const;

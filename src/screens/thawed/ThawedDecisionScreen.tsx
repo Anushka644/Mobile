@@ -1,12 +1,11 @@
-// Thawed decision (spec §4.5, design/exports/03-thawed-decision@2x.png).
+// Thawed decision (spec §4.5, restyled per docs/DESIGN_SYSTEM_V2.md "Thawed decision").
 //
-// Glow preset `thawed` (butter100 top glow + mint100 primary glow behind the cube). Close button
-// top right; "IT'S THAWED" eyebrow over "Still want the chunky sneakers?"; the thawed cube (250)
-// with bobbing sparkles; the frosted context card (mood · time of day · price); and the three
-// calm choices anchored 24pt above the bottom edge:
-//   Mint "Let it go · save $140"  → decide let-go → /let-go/[id] (replace)
-//   Secondary "Yes, I'll buy it"  → decide bought → confetti + "Enjoy it…" → open the url → home
-//   Ghost "Refreeze for 3 more days" → refreeze → /item/[id] (replace)
+// Plain paper. A close button top right; the clear tile (240); the mono caption "THAWED · WAITED
+// 3 DAYS"; the serif question "Still want the chunky sneakers?"; one line of context (what you felt
+// when you froze it); and the three calm choices stacked 24pt above the bottom edge:
+//   Ink "Let it go · save $140"       → decide let-go → /let-go/[id] (replace)
+//   White "Yes, I'll buy it"           → decide bought → confetti + "Enjoy it." → open the url → home
+//   Ghost "Refreeze for 3 more days"   → refreeze → /item/[id] (replace)
 // Once a choice is made the screen keeps rendering a snapshot of the item, so the decision landing
 // in the store doesn't bounce it to the redirect while it animates away.
 
@@ -15,10 +14,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Linking, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { AppText, Button, Icon, IconButton, ItemCube, Screen, useReducedMotion } from '@/components';
+import { AppText, Button, IconButton, ItemCube, Screen, useReducedMotion } from '@/components';
 import { now as clockNow, useNow } from '@/lib/clock';
-import { openableUrl } from '@/lib/url';
 import { haptics } from '@/lib/haptics';
+import { openableUrl } from '@/lib/url';
 import { selectItem } from '@/store/selectors';
 import { useChillStore } from '@/store/useChillStore';
 import { colors } from '@/theme/tokens';
@@ -26,17 +25,19 @@ import type { Item } from '@/types';
 
 import { BuyCelebration } from './BuyCelebration';
 import { ContextCard } from './ContextCard';
-import { letGoLabel, refreezeLabel, thawedQuestion, urlHost } from './thawedCopy';
+import { letGoLabel, refreezeLabel, thawedCaption, thawedQuestion, urlHost } from './thawedCopy';
 import { clearThawReminder, rescheduleThawReminder } from './thawReminder';
 
 /** How long the "Enjoy it" moment plays before heading home (reduced motion: shorter). */
 export const BUY_CELEBRATION_MS = 1900;
 const BUY_CELEBRATION_REDUCED_MS = 1200;
 
-/** Cube box on regular phones (Figma: 250); shorter screens get a smaller one so the CTAs fit. */
-const CUBE_SIZE = 250;
-const CUBE_SIZE_COMPACT = 196;
+/** Clear tile on regular phones; shorter screens get a smaller one so the choices fit. */
+const TILE = 240;
+const TILE_COMPACT = 176;
 const COMPACT_HEIGHT = 760;
+/** Same corner ratio as the freezer grid tiles. */
+const TILE_RADIUS_RATIO = 0.16;
 
 type Choice = 'let-go' | 'bought' | 'refreeze';
 
@@ -82,7 +83,8 @@ function ThawedDecision({
 
   const url = openableUrl(item.url);
   const busy = choice !== null;
-  const cubeSize = height > 0 && height < COMPACT_HEIGHT ? CUBE_SIZE_COMPACT : CUBE_SIZE;
+  const compact = height > 0 && height < COMPACT_HEIGHT;
+  const tile = compact ? TILE_COMPACT : TILE;
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -123,48 +125,39 @@ function ThawedDecision({
     router.replace(`/item/${item.id}`);
   };
 
-  const enter = (delay: number) => (reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(16));
+  const enter = (delay: number) =>
+    reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(20).stiffness(170);
 
   return (
     <View style={styles.fill} testID="thawed-decision">
       <Screen scroll glow="thawed" contentStyle={styles.content}>
         <View style={styles.nav}>
-          {/* Figma renders this circle opaque white (the kit's Surface style), not 55% glass. */}
-          <IconButton icon="close" variant="surface" accessibilityLabel="Close" onPress={close} disabled={busy} />
+          <IconButton icon="close" accessibilityLabel="Close" onPress={close} disabled={busy} />
         </View>
 
-        <Animated.View entering={enter(0)} style={styles.headline}>
-          <View style={styles.eyebrow}>
-            <Icon name="sparkle" size={16} color={colors.mint700} strokeWidth={2.6} />
-            <AppText variant="caption" color={colors.text.success}>
-              It’s thawed
-            </AppText>
-          </View>
-          <AppText variant="displayL" align="center" accessibilityRole="header">
-            {thawedQuestion(item.name)}
-          </AppText>
+        <Animated.View entering={reduced ? FadeIn.duration(220) : FadeIn.duration(360)} style={styles.hero}>
+          <ItemCube item={item} progress={1} thawed size={tile} radius={Math.round(tile * TILE_RADIUS_RATIO)} />
         </Animated.View>
 
-        <View style={[styles.hero, { marginTop: cubeSize === CUBE_SIZE ? 19 : 8 }]}>
-          <ItemCube item={item} progress={1} thawed size={cubeSize} />
-        </View>
-
-        <Animated.View entering={enter(80)} style={styles.context}>
+        <Animated.View entering={enter(60)} style={[styles.headline, compact ? styles.headlineCompact : null]}>
+          <AppText variant="caption" color={colors.text.secondary} align="center">
+            {thawedCaption(item, now)}
+          </AppText>
+          <AppText variant="displayL" align="center" accessibilityRole="header" style={styles.question}>
+            {thawedQuestion(item.name)}
+          </AppText>
           <ContextCard item={item} now={now} />
         </Animated.View>
 
-        <Animated.View entering={enter(160)} style={styles.actions}>
+        <Animated.View entering={enter(140)} style={styles.actions}>
           <Button
             label={letGoLabel(item)}
-            icon="coins"
-            variant="mint"
             onPress={letGo}
             disabled={busy && choice !== 'let-go'}
             testID="thawed-let-go"
           />
           <Button
             label="Yes, I’ll buy it"
-            icon="bag"
             variant="secondary"
             haptic={false}
             onPress={buy}
@@ -173,19 +166,22 @@ function ThawedDecision({
           />
           <Button
             label={refreezeLabel(item.cooldown)}
-            icon="refresh"
             variant="ghost"
             fullWidth
             onPress={refreezeIt}
             disabled={busy && choice !== 'refreeze'}
             testID="thawed-refreeze"
           />
-          <AppText variant="bodyS" color={colors.text.tertiary} align="center">
+          <AppText variant="bodyS" color={colors.text.tertiary} align="center" style={styles.footnote}>
             No wrong answer. Buying is allowed.
           </AppText>
         </Animated.View>
       </Screen>
-      <BuyCelebration visible={choice === 'bought'} detail={url ? `Opening ${urlHost(url)}…` : undefined} />
+      <BuyCelebration
+        visible={choice === 'bought'}
+        item={item}
+        detail={url ? `Opening ${urlHost(url)}…` : undefined}
+      />
     </View>
   );
 }
@@ -193,14 +189,13 @@ function ThawedDecision({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { alignItems: 'stretch' },
-  // Figma: nav at y 58 (status bar 54 + 4), headline at 112.
-  nav: { marginTop: 4, height: 48, flexDirection: 'row', justifyContent: 'flex-end' },
-  headline: { marginTop: 6, alignItems: 'center', gap: 8 },
-  eyebrow: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 16 },
-  hero: { alignItems: 'center' },
-  // The context card tucks 8pt into the cube's box (its bottom edge is empty below the puddle).
-  context: { marginTop: -8 },
-  // Bottom-anchored: the spacer above grows, so the CTAs sit 24pt above the screen bottom (Screen's
+  nav: { height: 44, flexDirection: 'row', justifyContent: 'flex-end' },
+  hero: { alignItems: 'center', marginTop: 8 },
+  headline: { marginTop: 32, alignItems: 'center', gap: 12 },
+  headlineCompact: { marginTop: 20, gap: 8 },
+  question: { paddingHorizontal: 8 },
+  // Bottom-anchored: the spacer above grows, so the choices sit 24pt above the screen bottom (Screen's
   // default bottom padding) and the whole column scrolls on short screens.
-  actions: { marginTop: 'auto', paddingTop: 32, gap: 12 },
+  actions: { marginTop: 'auto', paddingTop: 32, gap: 10 },
+  footnote: { marginTop: 2 },
 });

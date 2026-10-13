@@ -9,7 +9,7 @@ export function frozenLabel(item: Pick<Item, 'frozenAt' | 'refreezeCount'>, now:
   return `${item.refreezeCount > 0 ? 'Refrozen' : 'Frozen'} ${formatDuration(now - item.frozenAt)} ago`;
 }
 
-/** Mood chip text: "Felt hyped" (and "Felt like a need" for need). */
+/** Mood detail text: "Felt hyped" (and "Felt like a need" for need). */
 export const MOOD_CHIP_LABELS: Record<Mood, string> = {
   bored: 'Felt bored',
   sad: 'Felt sad',
@@ -47,6 +47,16 @@ export function thawMoment(thawAt: number, now: number): string {
 export function meltedPercent(progress: number): number {
   if (!Number.isFinite(progress) || progress <= 0) return 0;
   return Math.min(99, Math.floor(progress * 100 + 1e-9)); // epsilon: 0.58 * 100 = 57.999…
+}
+
+/**
+ * The two ends of the readout under the melt line (v2): "58% melted" on the left and when it thaws
+ * on the right ("tomorrow 9:41 PM"), or "Fully melted" / "Ready to decide" once thawed. Captions
+ * upper-case them.
+ */
+export function meltReadout(progress: number, thawAt: number, now: number, thawed = false): [string, string] {
+  if (thawed || now >= thawAt) return ['Fully melted', 'Ready to decide'];
+  return [`${meltedPercent(progress)}% melted`, thawMoment(thawAt, now)];
 }
 
 /** "58% melted · thaws Thu 9:41 PM" (Caption upper-cases it); "Fully melted · ready to decide" once thawed. */

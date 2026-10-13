@@ -5,7 +5,7 @@ import { useReducedMotion } from '@/components';
 
 /**
  * A counter that increments each time the screen gains focus, so charts can replay their
- * entrance (bars grow, the ring sweeps) whenever you come back to the tab.
+ * entrance (bars grow, the keep-rate bar fills) whenever you come back to the tab.
  */
 export function useFocusReplay(): number {
   const focused = useIsFocused();
@@ -22,8 +22,8 @@ const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /**
  * 0 → 1 over `duration` ms (ease-out cubic), restarting whenever `play` changes. Frame-driven React
- * state, for the few values Reanimated can't drive on every platform (SVG arc geometry, a
- * counting label). Stays 0 until the first focus; reduced motion: always 1.
+ * state, for the few values Reanimated can't drive on every platform (a counting label and the
+ * bar it moves with). Stays 0 until the first focus; reduced motion: always 1.
  */
 export function useTween(play: number, duration = 900, delay = 0): number {
   const reduced = useReducedMotion();
