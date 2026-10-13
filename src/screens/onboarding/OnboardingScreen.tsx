@@ -125,9 +125,10 @@ export function OnboardingScreen() {
   useAnimatedReaction(
     () => Math.min(LAST_SLIDE, Math.max(0, Math.round(position.get()))),
     (cur, prev) => {
-      // Skip the first run (prev null): the state already starts on slide 1, and a late echo of it
-      // must not rewind a page the user has already asked for.
-      if (prev !== null && cur !== prev) scheduleOnRN(onIndex, cur);
+      // The first run (prev null) compares against the initial slide: a first echo of slide 1 is
+      // ignored (it must not rewind a page the user already asked for), but a scroll that landed
+      // before the reaction's first frame (e.g. straight to slide 3) is honoured.
+      if (cur !== (prev ?? 0)) scheduleOnRN(onIndex, cur);
     }
   );
 
@@ -394,7 +395,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  copy: { gap: 20 },
+  // Title → body is 12 (the Display/L line box adds its own air), matching 08–10-onboarding. The 8pt
+  // of top padding keeps the block's height, so the hero art above stays exactly where it was.
+  copy: { gap: 12, paddingTop: 8 },
   chromeRow: {
     position: 'absolute',
     left: 0,

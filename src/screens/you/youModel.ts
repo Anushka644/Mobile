@@ -1,8 +1,6 @@
 // Pure helpers for the You tab (spec §4.9): currency options, row values, demo-control copy.
 
 import { DAY_MS } from '@/lib/melt';
-import { parseMoneyToCents } from '@/lib/money';
-import type { Goal } from '@/types';
 
 export interface CurrencyOption {
   code: string;
@@ -68,25 +66,3 @@ export function goalRowValue(name: string): string {
   return tail.charAt(0).toUpperCase() + tail.slice(1);
 }
 
-/** Longest goal name accepted by the goal sheet. */
-export const GOAL_NAME_MAX = 40;
-
-export interface GoalDraft {
-  name: string;
-  amount: string;
-}
-
-/** A valid Goal from the sheet's fields, or null (empty name, no positive amount). */
-export function parseGoalDraft(draft: GoalDraft): Goal | null {
-  const name = draft.name.trim().slice(0, GOAL_NAME_MAX);
-  const cents = parseMoneyToCents(draft.amount);
-  if (!name || cents == null || cents <= 0) return null;
-  return { name, targetCents: cents };
-}
-
-/** The amount field's initial text for an existing goal: '1200', '89.5'. */
-export function goalAmountText(goal: Goal | undefined): string {
-  if (!goal || !(goal.targetCents > 0)) return '';
-  const units = goal.targetCents / 100;
-  return Number.isInteger(units) ? String(units) : units.toFixed(2);
-}

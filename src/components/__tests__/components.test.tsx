@@ -28,6 +28,7 @@ import {
   Pill,
   PRODUCT_IMAGES,
   productImageFor,
+  ProductThumb,
   ProgressBar,
   ReadyBanner,
   ReflectionCard,
@@ -85,11 +86,22 @@ describe('pure helpers', () => {
     expect(glyphForItem({ name: 'Serum', category: 'beauty' })).toBe('sparkles');
   });
 
-  it('productImageFor resolves imageUri, then demo renders, else null', () => {
-    expect(productImageFor({ name: 'Anything', imageUri: 'file:///a.jpg' })).toEqual({ uri: 'file:///a.jpg' });
-    expect(productImageFor({ name: 'Chunky sneakers' })).toBe(PRODUCT_IMAGES.sneakers);
-    expect(productImageFor({ name: 'Smart watch' })).toBeNull(); // demo key without a bundled render
-    expect(productImageFor({ name: 'My own thing' })).toBeNull();
+  it('productImageFor resolves imageUri, then demo renders (demo items only), else null', () => {
+    expect(productImageFor({ id: 'u1', name: 'Anything', imageUri: 'file:///a.jpg' })).toEqual({
+      uri: 'file:///a.jpg',
+    });
+    expect(productImageFor({ id: 'demo-sneakers', name: 'Chunky sneakers' })).toBe(PRODUCT_IMAGES.sneakers);
+    expect(productImageFor({ id: 'demo-watch', name: 'Smart watch' })).toBeNull(); // no bundled render
+    expect(productImageFor({ id: 'u2', name: 'My own thing' })).toBeNull();
+    // A user item named like a demo item keeps its category tile (spec §7).
+    expect(productImageFor({ id: 'u3', name: 'Puffer jacket' })).toBeNull();
+    expect(productImageFor({ id: 'u4', name: 'Chunky sneakers' })).toBeNull();
+  });
+
+  it('a product image that fails to load falls back to the category tile', async () => {
+    await render(<ProductThumb item={{ id: 'u5', name: 'Gone', category: 'tech', imageUri: 'file:///gone.jpg' }} />);
+    await fireEvent(screen.getByTestId('product-photo'), 'error', { nativeEvent: { error: 'missing' } });
+    expect(screen.queryByTestId('product-photo')).toBeNull();
   });
 
   it('bottomGap is 24 except under a tall Android nav bar', () => {

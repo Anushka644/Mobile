@@ -4,8 +4,8 @@
 // "by letting things melt"; the hero total over the big Jar (fill = goal progress, or the let-go
 // count without a goal) with the "8 wants let go" pill; the goal card (tap → edit-goal sheet) or a
 // dashed "Add a goal" card; "Melted away" (let-go history, newest first); and a collapsible,
-// neutral "You bought". Scrolls under the floating tab bar (bottom padding 130, the tab bar draws
-// the 170pt cream fade).
+// neutral "You bought". Scrolls under the floating tab bar (bottom padding 178, past the tab bar's
+// 170pt cream fade).
 
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -15,10 +15,10 @@ import { AppText, jarLevel, Screen, SectionHeader, useReducedMotion, useTabBarSc
 import { selectBought, selectGoalProgress, selectLetGo, selectSavedCents } from '@/store/selectors';
 import { useChillStore } from '@/store/useChillStore';
 import { colors, radius, withAlpha } from '@/theme/tokens';
+import { GoalSheet } from '@/screens/goal/GoalSheet';
 
 import { AddGoalCard } from './AddGoalCard';
 import { BoughtSection } from './BoughtSection';
-import { EditGoalSheet } from './EditGoalSheet';
 import { GoalProgressCard } from './GoalProgressCard';
 import { HistoryRow } from './HistoryRow';
 import { SavedHero } from './SavedHero';
@@ -101,11 +101,12 @@ export function SavedScreen() {
         ) : null}
       </LayoutAnimationConfig>
 
-      <EditGoalSheet
+      <GoalSheet
         visible={editingGoal}
         onClose={() => setEditingGoal(false)}
         goal={settings.goal}
         currency={currency}
+        savedCents={saved}
       />
     </Screen>
   );

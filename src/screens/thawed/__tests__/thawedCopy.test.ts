@@ -5,7 +5,6 @@ import {
   itemNoun,
   letGoLabel,
   moodLine,
-  openableUrl,
   refreezeLabel,
   thawedQuestion,
   urlHost,
@@ -87,15 +86,7 @@ describe('action labels', () => {
   });
 });
 
-describe('openableUrl / urlHost', () => {
-  it('accepts http(s) and bare domains only', () => {
-    expect(openableUrl('https://nike.com/t/dunk')).toBe('https://nike.com/t/dunk');
-    expect(openableUrl(' nike.com/t/dunk ')).toBe('https://nike.com/t/dunk');
-    expect(openableUrl('javascript:alert(1)')).toBeNull();
-    expect(openableUrl('not a link')).toBeNull();
-    expect(openableUrl(undefined)).toBeNull();
-  });
-
+describe('urlHost', () => {
   it('shows a short host', () => {
     expect(urlHost('https://www.etsy.com/listing/1')).toBe('etsy.com');
     expect(urlHost('http://shop.example.co.uk:8080/x')).toBe('shop.example.co.uk');

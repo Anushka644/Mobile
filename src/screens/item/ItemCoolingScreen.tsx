@@ -14,6 +14,7 @@ import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated'
 
 import { Button, ConfirmDialog, ItemCube, ReflectionCard, Screen, SnowField } from '@/components';
 import { useNow } from '@/lib/clock';
+import { openableUrl } from '@/lib/url';
 import { haptics } from '@/lib/haptics';
 import { isReady, meltProgress, timeLeftMs } from '@/lib/melt';
 import { cancelNotification } from '@/lib/notifications';
@@ -24,7 +25,7 @@ import type { Item } from '@/types';
 import { CountdownHero } from './CountdownHero';
 import { ItemDetailsCard } from './ItemDetailsCard';
 import { ItemNavBar } from './ItemNavBar';
-import { frozenLabel, openableUrl } from './itemCopy';
+import { frozenLabel } from './itemCopy';
 import { useReflectionPrompt } from './useReflectionPrompt';
 
 /** Hero cube box (the Figma body is ~164 wide at 58% melted). */

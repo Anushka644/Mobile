@@ -17,6 +17,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { AppText, Button, Icon, IconButton, ItemCube, Screen, useReducedMotion } from '@/components';
 import { now as clockNow, useNow } from '@/lib/clock';
+import { openableUrl } from '@/lib/url';
 import { haptics } from '@/lib/haptics';
 import { selectItem } from '@/store/selectors';
 import { useChillStore } from '@/store/useChillStore';
@@ -25,7 +26,7 @@ import type { Item } from '@/types';
 
 import { BuyCelebration } from './BuyCelebration';
 import { ContextCard } from './ContextCard';
-import { letGoLabel, openableUrl, refreezeLabel, thawedQuestion, urlHost } from './thawedCopy';
+import { letGoLabel, refreezeLabel, thawedQuestion, urlHost } from './thawedCopy';
 import { clearThawReminder, rescheduleThawReminder } from './thawReminder';
 
 /** How long the "Enjoy it" moment plays before heading home (reduced motion: shorter). */

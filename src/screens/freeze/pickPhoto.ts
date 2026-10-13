@@ -1,7 +1,8 @@
 // Photo for the Freeze sheet's photo tile (spec §4.3), via expo-image-picker.
 //
 // - iOS / Android: the system photo picker (no permission prompt needed for the library) with a
-//   square crop. The picker's cached file uri is stored on the item.
+//   square crop. The picked file lives in the cache (which the OS may purge), so it is copied into
+//   the document directory and the item stores a relative photo ref (see src/lib/photos.ts).
 // - Web: a file input. The picker returns a `blob:` URL that dies with the page, so the picture is
 //   centre-cropped to a square and stored as a small data URI instead (it persists in localStorage
 //   with the rest of the store): photos as a 512px JPEG, transparent cut-outs as a 320px PNG.
@@ -9,13 +10,18 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 
+import { persistPhoto } from '@/lib/photos';
+
 /** Side of a web photo after downscaling (JPEG, ~40KB). */
 const WEB_PHOTO_SIDE = 512;
 /** Side of a web cut-out (PNG keeps the alpha but is ~4x heavier, so it is kept smaller). */
 const WEB_CUTOUT_SIDE = 320;
 const WEB_JPEG_QUALITY = 0.82;
 
-/** Opens the photo library and resolves to an image uri, or null when cancelled / unavailable. */
+/**
+ * Opens the photo library and resolves to the image to store on the item (a photo ref on native, a
+ * data URI on web), or null when cancelled / unavailable.
+ */
 export async function pickPhoto(): Promise<string | null> {
   try {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -27,7 +33,7 @@ export async function pickPhoto(): Promise<string | null> {
     });
     const asset = result.canceled ? null : result.assets?.[0];
     if (!asset?.uri) return null;
-    return Platform.OS === 'web' ? await toSquareDataUri(asset.uri) : asset.uri;
+    return Platform.OS === 'web' ? await toSquareDataUri(asset.uri) : await persistPhoto(asset.uri);
   } catch {
     return null;
   }

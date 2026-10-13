@@ -38,6 +38,7 @@ export {
   GUTTER,
   TAB_BAR_FADE_HEIGHT,
   TAB_BAR_HEIGHT,
+  TAB_BAR_CLEARANCE,
   TAB_BAR_SCROLL_PADDING,
   topInset,
   useBottomGap,
@@ -45,7 +46,16 @@ export {
   useTopInset,
   WEB_TOP_INSET,
 } from './layout';
-export { PRESS_SCALE, springCalm, springPop, springPress, timingFade, timingMelt, useReducedMotion } from './motion';
+export {
+  PRESS_SCALE,
+  springCalm,
+  springPop,
+  springPress,
+  springSheet,
+  timingFade,
+  timingMelt,
+  useReducedMotion,
+} from './motion';
 export { Pill, type PillProps, type PillTone } from './Pill';
 export { PressableScale, type HapticKind, type PressableScaleProps } from './PressableScale';
 export {
@@ -77,3 +87,4 @@ export { SnowField, type SnowFieldProps } from './SnowField';
 export { TAB_META, TabBar, type TabBarProps } from './TabBar';
 export { TextField, type TextFieldProps } from './TextField';
 export { Toggle, type ToggleProps } from './Toggle';
+export { ariaState, type AriaStateProps } from './a11y';

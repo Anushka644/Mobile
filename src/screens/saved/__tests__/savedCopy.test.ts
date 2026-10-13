@@ -1,13 +1,11 @@
 import { countUpValue, easeOutCubic } from '../../letgo/useCountUp';
 import {
   goalAmountCaption,
-  goalAmountText,
   goalPercent,
   goalPercentLabel,
   goalToGoCaption,
   historyLine,
   meltedAwayCaption,
-  parseGoalInput,
   savedSoFar,
   wantsLetGoLabel,
 } from '../savedCopy';
@@ -54,21 +52,6 @@ describe('saved copy', () => {
   });
 });
 
-describe('goal input', () => {
-  it('needs a name and a positive amount', () => {
-    expect(parseGoalInput(' Tokyo   trip ', '2,500')).toEqual({ name: 'Tokyo trip', targetCents: 250000 });
-    expect(parseGoalInput('Bike', '899.99')).toEqual({ name: 'Bike', targetCents: 89999 });
-    expect(parseGoalInput('', '100')).toBeNull();
-    expect(parseGoalInput('Bike', '0')).toBeNull();
-    expect(parseGoalInput('Bike', 'abc')).toBeNull();
-  });
-
-  it('prefills the amount field', () => {
-    expect(goalAmountText(120000)).toBe('1200');
-    expect(goalAmountText(120050)).toBe('1200.50');
-    expect(goalAmountText(undefined)).toBe('');
-  });
-});
 
 describe('count-up curve', () => {
   it('eases out from → to over the duration', () => {

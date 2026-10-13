@@ -85,6 +85,8 @@ export const ICONS = {
     },
   ],
   user: [{ d: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2' }, { c: [12, 7, 4] }],
+  // Lucide 'user-round' (r5 head, arched shoulders): the You tab glyph in the Figma tab bar.
+  'user-round': [{ c: [12, 8, 5] }, { d: 'M20 21a8 8 0 0 0-16 0' }],
   droplet: [
     { d: 'M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z' },
   ],

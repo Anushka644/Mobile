@@ -67,18 +67,6 @@ export function refreezeLabel(cooldown: CooldownKey): string {
   return `Refreeze for ${t.value} more ${t.unit}`;
 }
 
-/**
- * A safe external link for "Yes, I'll buy it": http(s) URLs as-is, a bare domain gets https://,
- * anything else (javascript:, mailto:, garbage) is null.
- */
-export function openableUrl(url: string | undefined): string | null {
-  const trimmed = url?.trim();
-  if (!trimmed) return null;
-  if (/^https?:\/\/[^\s/?#]*[a-z\d]/i.test(trimmed)) return trimmed;
-  if (/^[a-z\d-]+(\.[a-z\d-]+)+(?::\d+)?([/?#]\S*)?$/i.test(trimmed)) return `https://${trimmed}`;
-  return null;
-}
-
 /** The host for "Opening nike.com…", without a leading www. */
 export function urlHost(url: string): string {
   const match = /^https?:\/\/([^/?#:]+)/i.exec(url);

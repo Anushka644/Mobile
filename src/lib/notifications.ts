@@ -1,10 +1,11 @@
 // Local "your item has thawed" notifications, wrapped around expo-notifications.
-// Safe to import on web: every call checks Platform.OS first and no-ops there
-// (expo-notifications has no local scheduling on web).
+// iOS / Android only: the web bundle gets ./notifications.web.ts (same API, all no-ops), so it never
+// imports expo-notifications. The Platform.OS checks below stay as a second guard.
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import { palette } from '@/theme/tokens';
 import type { Item } from '@/types';
 
 /** Android notification channel for thaw reminders (Android 8+ needs one before scheduling). */
@@ -59,7 +60,7 @@ function ensureAndroidChannel(): Promise<void> {
     name: 'Thaw reminders',
     description: 'Tells you when a frozen item is ready to decide on.',
     importance: Notifications.AndroidImportance.HIGH,
-    lightColor: '#4FA9E6',
+    lightColor: palette.ice600,
     vibrationPattern: [0, 180, 120, 180],
   }).then(
     () => undefined,

@@ -12,6 +12,11 @@ export interface ChipProps {
   icon?: IconName;
   /** Plum fill + white text + button shadow. */
   selected?: boolean;
+  /**
+   * 'md' (default): padding 16/12, 44 high. 'sm': padding 14/8, 36 high (the tap target stays 44
+   * via hitSlop) — for secondary rows such as the Freeze sheet's auto-guessed category.
+   */
+  size?: 'md' | 'sm';
   /** Without onPress the chip renders as a static (non-pressable) tag. */
   onPress?: () => void;
   disabled?: boolean;
@@ -28,6 +33,7 @@ export function Chip({
   label,
   icon,
   selected = false,
+  size = 'md',
   onPress,
   disabled,
   style,
@@ -38,6 +44,7 @@ export function Chip({
   const surface = [
     styles.base,
     selected ? styles.selected : styles.unselected,
+    size === 'sm' ? styles.small : null,
     disabled ? styles.disabled : null,
     style,
   ];
@@ -62,6 +69,7 @@ export function Chip({
       onPress={onPress}
       disabled={disabled}
       haptic="selection"
+      hitSlop={size === 'sm' ? 4 : undefined}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={accessibilityLabel ?? label}
@@ -84,6 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     minHeight: 44,
   },
+  small: { paddingHorizontal: 14, paddingVertical: 8, minHeight: 36 },
   unselected: { backgroundColor: colors.bg.surface, ...shadow('soft') },
   selected: { backgroundColor: colors.action.primary, ...shadow('button') },
   disabled: { opacity: 0.4 },

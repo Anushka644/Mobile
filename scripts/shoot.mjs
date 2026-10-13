@@ -138,7 +138,8 @@ async function main() {
     const r = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', 'dist'], {
       cwd: ROOT,
       stdio: 'inherit',
-      env: { ...process.env, EXPO_OFFLINE: '1', CI: '1' },
+      // EXPO_PUBLIC_QA=1: a QA export (all URL hooks + /dev/kit), see src/lib/testHooks.ts.
+      env: { ...process.env, EXPO_OFFLINE: '1', CI: '1', EXPO_PUBLIC_QA: '1' },
     });
     if (r.status !== 0) throw new Error(`expo export failed (exit ${r.status})`);
   }

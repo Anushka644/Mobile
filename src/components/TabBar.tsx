@@ -27,7 +27,7 @@ export const TAB_META: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Freezer', icon: 'snowflake' },
   saved: { label: 'Saved', icon: 'coins' },
   insights: { label: 'Insights', icon: 'chart' },
-  you: { label: 'You', icon: 'user' },
+  you: { label: 'You', icon: 'user-round' },
 };
 
 const CAN_BLUR = Platform.OS === 'ios' || Platform.OS === 'web';
@@ -42,7 +42,7 @@ export interface TabBarProps extends BottomTabBarProps {
  * Freezer, Saved, [plum + FAB → /freeze], Insights, You. 353 × 76, its bottom edge 24pt above the
  * screen bottom (no safe-area inset, no home indicator). White 92% + backdrop blur (iOS/web),
  * active plum / inactive plum300, the active icon bounces 1 → 1.15 → 1. Tab screens pad their
- * scroll content with `useTabBarScrollPadding()` (130).
+ * scroll content with `useTabBarScrollPadding()` (178: the whole fade, so the last row can clear it).
  */
 export function TabBar({ state, descriptors, navigation, insets, fade = true }: TabBarProps) {
   const router = useRouter();
@@ -144,6 +144,7 @@ function TabItem({
       onLongPress={onLongPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: focused }}
+      aria-selected={focused}
       accessibilityLabel={label}
       testID={testID}
       style={styles.tab}
@@ -151,7 +152,7 @@ function TabItem({
       <Animated.View style={iconStyle}>
         <Icon name={icon} size={24} color={color} />
       </Animated.View>
-      <AppText variant="caption" uppercase={false} color={color} numberOfLines={1}>
+      <AppText variant="caption" uppercase={false} color={color} numberOfLines={1} style={styles.label}>
         {label}
       </AppText>
     </Pressable>
@@ -169,12 +170,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     pointerEvents: 'box-none',
   },
+  // Geometry measured off the Figma tab bar: 14 + 4 × 63.5 tabs + a 71 FAB slot + 14 = 353, which
+  // centres Freezer at 65.75 and the FAB at 196.5 on a 393 screen.
   bar: {
     width: '100%',
     maxWidth: 353,
     height: TAB_BAR_HEIGHT,
     borderRadius: radius.full,
-    paddingHorizontal: 20,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     ...shadow('raised'),
@@ -182,7 +185,9 @@ const styles = StyleSheet.create({
   clip: { borderRadius: radius.full, overflow: 'hidden', pointerEvents: 'none' },
   tint: { backgroundColor: withAlpha(colors.white, CAN_BLUR ? 0.92 : 0.97) },
   tab: { flex: 1, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  fabSlot: { width: 74, alignItems: 'center', justifyContent: 'center' },
+  fabSlot: { width: 71, alignItems: 'center', justifyContent: 'center' },
+  // Sentence-case labels drop Caption's +6% tracking (it is meant for UPPERCASE).
+  label: { letterSpacing: 0 },
   fab: {
     width: 58,
     height: 58,

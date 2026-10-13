@@ -83,8 +83,13 @@ export interface CategoryChipsProps {
   onChange: (category: Category) => void;
 }
 
-/** Room for the chips' soft shadow inside the horizontal scroller (it clips its content). */
-const SHADOW_ROOM = 14;
+/**
+ * Room for the chips' shadows inside the horizontal scroller (it clips its content): the selected
+ * chip's `button` shadow reaches ~24pt below it (10 offset + 18 blur − 4 spread) and ~6 above.
+ * Padded inside, cancelled by negative margins outside, so the layout doesn't move.
+ */
+const SHADOW_ABOVE = 8;
+const SHADOW_BELOW = 26;
 
 /**
  * Category chips in one horizontally scrolling row that bleeds to the screen edges. When the value
@@ -133,6 +138,7 @@ export function CategoryChips({ value, onChange }: CategoryChipsProps) {
           <Chip
             label={CATEGORY_NAMES[category]}
             icon={CATEGORY_ICONS[category]}
+            size="sm"
             selected={value === category}
             onPress={() => onChange(category)}
             testID={`category-${category}`}
@@ -153,6 +159,6 @@ const styles = StyleSheet.create({
   },
   note: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 10 },
-  bleed: { marginHorizontal: -GUTTER, marginVertical: -SHADOW_ROOM, flexGrow: 0 },
-  scrollRow: { gap: 8, paddingHorizontal: GUTTER, paddingVertical: SHADOW_ROOM },
+  bleed: { marginHorizontal: -GUTTER, marginTop: -SHADOW_ABOVE, marginBottom: -SHADOW_BELOW, flexGrow: 0 },
+  scrollRow: { gap: 8, paddingHorizontal: GUTTER, paddingTop: SHADOW_ABOVE, paddingBottom: SHADOW_BELOW },
 });

@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { DEMO_IMAGE_KEYS } from '@/store/demo';
+import { resolvePhotoUri } from '@/lib/photos';
+import { DEMO_IMAGE_KEYS, isDemoItem } from '@/store/demo';
 import { colors, radius as radii, withAlpha } from '@/theme/tokens';
 import type { Category, Item } from '@/types';
 
@@ -29,11 +31,13 @@ function isProductImageKey(key: string): key is ProductImageKey {
 }
 
 /**
- * The picture for an item: its own `imageUri`, else the bundled render for a demo item
- * (via DEMO_IMAGE_KEYS by name), else null (callers fall back to the category tile).
+ * The picture for an item: its own `imageUri`, else — for a demo item only — the bundled render
+ * (via DEMO_IMAGE_KEYS by name), else null: a user item without a photo shows its category tile
+ * even when its name matches a demo item's (spec §7).
  */
-export function productImageFor(item: Pick<Item, 'name' | 'imageUri'>): ProductImageSource | null {
-  if (item.imageUri) return { uri: item.imageUri };
+export function productImageFor(item: Pick<Item, 'id' | 'name' | 'imageUri'>): ProductImageSource | null {
+  if (item.imageUri) return { uri: resolvePhotoUri(item.imageUri) };
+  if (!isDemoItem(item)) return null;
   const key = DEMO_IMAGE_KEYS[item.name];
   return key && isProductImageKey(key) ? PRODUCT_IMAGES[key] : null;
 }
@@ -41,7 +45,23 @@ export function productImageFor(item: Pick<Item, 'name' | 'imageUri'>): ProductI
 /** Normalizes an image prop (source, uri string or nothing) to a source or null. */
 export function toImageSource(image: ProductImageSource | string | null | undefined): ProductImageSource | null {
   if (image == null || image === '') return null;
-  return typeof image === 'string' ? { uri: image } : image;
+  return typeof image === 'string' ? { uri: resolvePhotoUri(image) } : image;
+}
+
+/**
+ * `source` until it fails to load, then null (so callers fall back to the category tile — e.g. a
+ * photo whose file is gone). Pass the returned `onError` to the expo-image <Image>.
+ */
+export function useImageFallback(source: ProductImageSource | null): {
+  source: ProductImageSource | null;
+  onError: () => void;
+} {
+  const key = source == null ? null : typeof source === 'number' ? `asset:${source}` : source.uri;
+  const [failed, setFailed] = useState<string | null>(null);
+  const onError = useCallback(() => {
+    if (key != null) setFailed(key);
+  }, [key]);
+  return { source: key != null && key === failed ? null : source, onError };
 }
 
 // ---------------------------------------------------------------------------
@@ -102,7 +122,7 @@ export function ProductTile({ category, glyph, size = 92, style }: ProductTilePr
 // ---------------------------------------------------------------------------
 
 export interface ProductThumbProps {
-  item: Pick<Item, 'name' | 'imageUri' | 'category'>;
+  item: Pick<Item, 'id' | 'name' | 'imageUri' | 'category'>;
   /** Default 48. */
   size?: number;
   /** Background behind a picture. Default cream200 (sunken). */
@@ -112,7 +132,7 @@ export interface ProductThumbProps {
 
 /** Small square thumbnail for lists (Saved "Melted away" rows): picture on a soft tile, or the category tile. */
 export function ProductThumb({ item, size = 48, background = colors.bg.sunken, style }: ProductThumbProps) {
-  const source = productImageFor(item);
+  const { source, onError } = useImageFallback(productImageFor(item));
   if (!source) return <ProductTile category={item.category} glyph={glyphForItem(item)} size={size} style={style} />;
   const isPhoto = typeof source !== 'number';
   return (
@@ -133,7 +153,9 @@ export function ProductThumb({ item, size = 48, background = colors.bg.sunken, s
         source={source}
         contentFit={isPhoto ? 'cover' : 'contain'}
         style={isPhoto ? StyleSheet.absoluteFill : { width: size * 0.82, height: size * 0.82 }}
+        onError={onError}
         accessibilityIgnoresInvertColors
+        testID="product-photo"
       />
     </View>
   );

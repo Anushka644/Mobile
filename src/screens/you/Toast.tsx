@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
-import { AppText, Icon, springPop, useReducedMotion, useTopInset, type IconName } from '@/components';
+import { AppText, Icon, springPress, useReducedMotion, useTopInset, type IconName } from '@/components';
 import { colors, radius, shadow } from '@/theme/tokens';
 
 export interface ToastMessage {
@@ -68,7 +68,9 @@ export function Toast({ toast, onHide }: ToastProps) {
   useEffect(() => {
     if (toast) {
       shown.set(0);
-      shown.set(reduced ? withTiming(1, { duration: 200 }) : withSpring(1, springPop));
+      // spring.press (damping ratio ~0.6): a quick drop that settles in ~350ms, so the action button
+      // holds still for nearly all of the time the toast is up.
+      shown.set(reduced ? withTiming(1, { duration: 200 }) : withSpring(1, springPress));
     } else {
       shown.set(withTiming(0, { duration: 180 }));
     }

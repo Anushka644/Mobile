@@ -1,22 +1,15 @@
-// The You tab's bottom sheets: default cooldown, currency, savings goal and "Why waiting works".
+// The You tab's bottom sheets: default cooldown, currency and "Why waiting works" (the savings
+// goal sheet is shared with the Saved tab: src/screens/goal/GoalSheet.tsx).
 
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { AppText, Button, CooldownPicker, Icon, PressableScale, ProgressBar, Sheet, TextField } from '@/components';
-import { formatMoney } from '@/lib/money';
+import { AppText, Button, CooldownPicker, Icon, PressableScale, Sheet } from '@/components';
 import { colors, radius, shadow, withAlpha } from '@/theme/tokens';
-import type { CooldownKey, Goal } from '@/types';
+import type { CooldownKey } from '@/types';
 
-import {
-  CURRENCIES,
-  currencyPrefix,
-  GOAL_NAME_MAX,
-  goalAmountText,
-  parseGoalDraft,
-  type GoalDraft,
-} from './youModel';
+import { CURRENCIES } from './youModel';
 
 // ---------------------------------------------------------------------------
 // Default cooldown
@@ -93,90 +86,6 @@ export function CurrencySheet({ visible, value, onChange, onClose }: CurrencyShe
       </AppText>
       <Button label="Done" onPress={onClose} />
     </Sheet>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Savings goal
-
-export interface GoalSheetProps {
-  visible: boolean;
-  goal: Goal | undefined;
-  currency: string;
-  /** Total let go so far, for the progress line. */
-  savedCents: number;
-  onSave: (goal: Goal) => void;
-  onRemove: () => void;
-  onClose: () => void;
-}
-
-export function GoalSheet(props: GoalSheetProps) {
-  // Remount the form each time the sheet opens so it starts from the stored goal.
-  const [openCount, setOpenCount] = useState(0);
-  const [wasVisible, setWasVisible] = useState(props.visible);
-  if (props.visible !== wasVisible) {
-    setWasVisible(props.visible);
-    if (props.visible) setOpenCount((n) => n + 1);
-  }
-  return (
-    <Sheet
-      visible={props.visible}
-      onClose={props.onClose}
-      title="Savings goal"
-      subtitle="Give your jar something to fill up for."
-      testID="sheet-goal"
-    >
-      <GoalForm key={openCount} {...props} />
-    </Sheet>
-  );
-}
-
-function GoalForm({ goal, currency, savedCents, onSave, onRemove }: GoalSheetProps) {
-  const [draft, setDraft] = useState<GoalDraft>({ name: goal?.name ?? '', amount: goalAmountText(goal) });
-  const parsed = parseGoalDraft(draft);
-  const progress = parsed ? Math.min(1, savedCents / parsed.targetCents) : null;
-
-  return (
-    <>
-      <TextField
-        label="What are you saving for?"
-        placeholder="Weekend in Lisbon"
-        value={draft.name}
-        onChangeText={(name) => setDraft((d) => ({ ...d, name }))}
-        maxLength={GOAL_NAME_MAX}
-        autoCapitalize="sentences"
-        returnKeyType="next"
-        testID="goal-name"
-      />
-      <TextField
-        label="Target"
-        prefix={currencyPrefix(currency)}
-        placeholder="1,200"
-        value={draft.amount}
-        onChangeText={(amount) => setDraft((d) => ({ ...d, amount }))}
-        keyboardType="decimal-pad"
-        returnKeyType="done"
-        testID="goal-amount"
-      />
-      {progress != null && savedCents > 0 ? (
-        <View style={styles.progress}>
-          <ProgressBar progress={progress} tone="mint" height={10} />
-          <AppText variant="bodyS" color={colors.text.secondary}>
-            {formatMoney(savedCents, currency)} saved · {Math.round(progress * 100)}% of the way
-          </AppText>
-        </View>
-      ) : null}
-      <View style={styles.actions}>
-        <Button
-          label={goal ? 'Save goal' : 'Set goal'}
-          icon="heart"
-          disabled={!parsed}
-          onPress={() => parsed && onSave(parsed)}
-          testID="goal-save"
-        />
-        {goal ? <Button label="Remove goal" variant="ghost" onPress={onRemove} testID="goal-remove" /> : null}
-      </View>
-    </>
   );
 }
 
@@ -269,8 +178,6 @@ const styles = StyleSheet.create({
   },
   symbolOn: { backgroundColor: withAlpha(colors.white, 0.7) },
   currencyText: { flex: 1 },
-  progress: { gap: 8 },
-  actions: { gap: 6, marginTop: 4 },
   curveCard: {
     borderRadius: radius.md,
     backgroundColor: colors.bg.surface,

@@ -5,11 +5,8 @@ import {
   currencyLabel,
   currencyPrefix,
   fastForwardMessage,
-  GOAL_NAME_MAX,
-  goalAmountText,
   goalRowValue,
   offsetLabel,
-  parseGoalDraft,
 } from '../youModel';
 
 const HOUR = 60 * 60 * 1000;
@@ -76,32 +73,4 @@ describe('goalRowValue', () => {
   });
 });
 
-describe('parseGoalDraft', () => {
-  it('accepts a name and a positive amount', () => {
-    expect(parseGoalDraft({ name: ' Weekend in Lisbon ', amount: '1,200' })).toEqual({
-      name: 'Weekend in Lisbon',
-      targetCents: 120000,
-    });
-    expect(parseGoalDraft({ name: 'Bike', amount: '89.50' })).toEqual({ name: 'Bike', targetCents: 8950 });
-  });
 
-  it('rejects an empty name or a missing / zero amount', () => {
-    expect(parseGoalDraft({ name: '  ', amount: '100' })).toBeNull();
-    expect(parseGoalDraft({ name: 'Bike', amount: '' })).toBeNull();
-    expect(parseGoalDraft({ name: 'Bike', amount: '0' })).toBeNull();
-    expect(parseGoalDraft({ name: 'Bike', amount: 'abc' })).toBeNull();
-  });
-
-  it('caps the name length', () => {
-    const goal = parseGoalDraft({ name: 'x'.repeat(80), amount: '10' });
-    expect(goal?.name).toHaveLength(GOAL_NAME_MAX);
-  });
-});
-
-describe('goalAmountText', () => {
-  it('prefills the amount field', () => {
-    expect(goalAmountText(undefined)).toBe('');
-    expect(goalAmountText({ name: 'A', targetCents: 120000 })).toBe('1200');
-    expect(goalAmountText({ name: 'A', targetCents: 8950 })).toBe('89.50');
-  });
-});

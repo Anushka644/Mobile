@@ -38,6 +38,7 @@ import { useNow } from '@/lib/clock';
 import { thawAtFor } from '@/lib/melt';
 import { currencySymbol } from '@/lib/money';
 import { guessNameFromUrl } from '@/lib/parse';
+import { deletePhoto } from '@/lib/photos';
 import { useChillStore } from '@/store/useChillStore';
 import { colors } from '@/theme/tokens';
 import type { Category, CooldownKey, Item, Mood } from '@/types';
@@ -46,6 +47,7 @@ import { ClipboardCard, Collapsible } from './ClipboardCard';
 import {
   autoCategory,
   centsToPriceInput,
+  displayUrl,
   formatThawMoment,
   isDraftValid,
   isFirstOwnFreeze,
@@ -68,8 +70,12 @@ import { useKeyboardOverlap } from './useKeyboardOverlap';
 /** Blocks holding text inputs that may need scrolling into view above the keyboard. */
 type FieldKey = 'details';
 
-/** Space between the end of the form and the sticky CTA when scrolled to the bottom. */
-const CTA_CLEARANCE = 16;
+/**
+ * Space between the end of the form and the sticky CTA when scrolled to the bottom: the CTA's 40pt
+ * fade, so the cooldown cards can always scroll fully clear of it (on an 852pt screen the whole
+ * form fits with exactly this much air, and nothing scrolls or fades).
+ */
+const CTA_CLEARANCE = 40;
 
 /** Space the sticky CTA takes at the bottom of the scroll viewport (button + gap + breathing room). */
 const CTA_SPACE = 60 + BOTTOM_GAP + 20;
@@ -233,9 +239,20 @@ export function FreezeSheet() {
     // Web: the file dialog may never report a cancel in older browsers, so don't lock the tile there.
     if (Platform.OS !== 'web') setPicking(true);
     const uri = await pickPhoto();
-    if (!mounted.current) return;
+    if (!mounted.current) {
+      deletePhoto(uri);
+      return;
+    }
     setPicking(false);
-    if (uri) setPhotoUri(uri);
+    if (uri) {
+      deletePhoto(photoUri); // the photo it replaces (native keeps a copy per pick)
+      setPhotoUri(uri);
+    }
+  };
+
+  const removePhoto = () => {
+    deletePhoto(photoUri);
+    setPhotoUri(null);
   };
 
   const onLinkBlur = () => {
@@ -306,7 +323,10 @@ export function FreezeSheet() {
                 updateMoreBelow();
               },
               scrollEventThrottle: 32,
-              keyboardDismissMode: Platform.OS === 'ios' ? 'interactive' : 'on-drag',
+              // RN-web blurs the focused input on *every* scroll event in 'on-drag' mode (including
+              // focus-scrolls and reveal()'s scrollTo), so web never dismisses on scroll.
+              keyboardDismissMode:
+                Platform.OS === 'ios' ? 'interactive' : Platform.OS === 'android' ? 'on-drag' : 'none',
             }}
             bottomPadding={CTA_CLEARANCE}
             footer={
@@ -345,11 +365,14 @@ export function FreezeSheet() {
             </Collapsible>
             <Collapsible open={!showSuggestion}>
               <View style={styles.slot}>
+                {/* No caption row: the link is optional, says so in its placeholder, and takes the
+                    clipboard card's single-row slot, so the whole form fits above the CTA. */}
                 <TextField
-                  label="Link (optional)"
                   icon="link"
-                  placeholder="Paste a product link"
+                  placeholder="Paste a product link (optional)"
+                  accessibilityLabel="Link (optional)"
                   value={link}
+                  displayValue={displayUrl(link)}
                   onChangeText={setLink}
                   keyboardType="url"
                   inputMode="url"
@@ -373,7 +396,7 @@ export function FreezeSheet() {
                 photoUri={photoUri}
                 busy={picking}
                 onPick={choosePhoto}
-                onRemove={() => setPhotoUri(null)}
+                onRemove={removePhoto}
               />
               <View style={styles.fields}>
                 <TextField

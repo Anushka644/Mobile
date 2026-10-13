@@ -4,8 +4,8 @@
 
 import { Platform } from 'react-native';
 
-import { now } from '@/lib/clock';
-import { cancelNotification, scheduleThawNotification } from '@/lib/notifications';
+import { cancelNotification } from '@/lib/notifications';
+import { scheduleItemThawNotification } from '@/lib/thawSchedule';
 import { useChillStore } from '@/store/useChillStore';
 import type { Item } from '@/types';
 
@@ -24,7 +24,8 @@ export async function rescheduleThawReminder(item: Pick<Item, 'id' | 'name' | 't
   clearThawReminder(item);
   if (Platform.OS === 'web' || !useChillStore.getState().settings.notificationsEnabled) return null;
   try {
-    const id = await scheduleThawNotification(item, now());
+    // thawAt is app time (maybe fast-forwarded); the OS fires on the device clock.
+    const id = await scheduleItemThawNotification(item);
     const current = useChillStore.getState().items.find((i) => i.id === item.id);
     // Still the same cooldown (not decided or refrozen again while scheduling)?
     if (id && current && !current.decision && current.thawAt === item.thawAt) {

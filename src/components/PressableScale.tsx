@@ -10,6 +10,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { haptics } from '@/lib/haptics';
 
+import { ariaState } from './a11y';
 import { PRESS_SCALE, springPress, timingFade, useReducedMotion } from './motion';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -32,7 +33,8 @@ export interface PressableScaleProps extends Omit<PressableProps, 'style' | 'chi
 /**
  * The squishy press primitive (spec §1.4, §5): shrinks to 0.96 on press-in and springs back
  * with a slight overshoot (spring.press). Reduced motion: a quick ease with no overshoot.
- * Disabled pressables don't animate and get `accessibilityState.disabled`.
+ * Disabled pressables don't animate and get `accessibilityState.disabled`. The accessibility state
+ * is mirrored to aria-* props so it also reaches the DOM on web (see ./a11y.ts).
  */
 export function PressableScale({
   style,
@@ -74,10 +76,12 @@ export function PressableScale({
     onPress?.(e);
   };
 
+  const a11yState = { ...accessibilityState, disabled: !!disabled };
   return (
     <AnimatedPressable
       accessibilityRole={accessibilityRole}
-      accessibilityState={{ ...accessibilityState, disabled: !!disabled }}
+      accessibilityState={a11yState}
+      {...ariaState(a11yState)}
       disabled={disabled}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}

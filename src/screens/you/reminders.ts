@@ -8,15 +8,16 @@
 
 import { Platform } from 'react-native';
 
-import { now, timeOffsetMs } from '@/lib/clock';
-import { cancelNotification, ensurePermission, scheduleThawNotification } from '@/lib/notifications';
+import { now } from '@/lib/clock';
+import { cancelNotification, ensurePermission } from '@/lib/notifications';
+import { scheduleItemThawNotification } from '@/lib/thawSchedule';
+import { isDemoItem } from '@/store/demo';
 import { useChillStore } from '@/store/useChillStore';
 
 export type ReminderResult = 'on' | 'off' | 'denied' | 'web';
 
 /** Schedules thaw notifications for undecided, still-cooling items without one. Returns how many. */
 export async function scheduleMissingReminders(): Promise<number> {
-  const offset = timeOffsetMs();
   const appNow = now();
   const pending = useChillStore
     .getState()
@@ -24,10 +25,7 @@ export async function scheduleMissingReminders(): Promise<number> {
   let scheduled = 0;
   for (const item of pending) {
     // The app clock may be fast-forwarded (demo); the OS fires on the device clock.
-    const id = await scheduleThawNotification(
-      { id: item.id, name: item.name, thawAt: item.thawAt - offset },
-      appNow - offset
-    );
+    const id = await scheduleItemThawNotification(item);
     if (id && useChillStore.getState().items.some((i) => i.id === item.id)) {
       useChillStore.getState().setNotificationId(item.id, id);
       scheduled++;
@@ -42,6 +40,28 @@ export async function cancelAllReminders(): Promise<void> {
   for (const item of withIds) {
     await cancelNotification(item.notificationId);
     useChillStore.getState().setNotificationId(item.id, undefined);
+  }
+}
+
+/**
+ * "Load sample freezer": replaces the sample items (seedDemo) without orphaning their reminders.
+ * The old sample items' notifications are cancelled (seedDemo drops their ids, so nothing could
+ * cancel them later), and the fresh sample items get reminders when they are switched on.
+ * The store updates synchronously; the notification bookkeeping follows. Never throws.
+ */
+export async function loadSampleFreezer(): Promise<void> {
+  const stale = useChillStore
+    .getState()
+    .items.filter((i) => isDemoItem(i) && i.notificationId)
+    .map((i) => i.notificationId);
+  useChillStore.getState().seedDemo();
+  try {
+    for (const id of stale) await cancelNotification(id);
+    if (Platform.OS !== 'web' && useChillStore.getState().settings.notificationsEnabled) {
+      await scheduleMissingReminders();
+    }
+  } catch {
+    // Best effort: the freezer itself is already loaded.
   }
 }
 

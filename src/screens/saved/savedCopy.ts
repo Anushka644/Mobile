@@ -2,7 +2,7 @@
 
 import { formatDuration, formatShortDate } from '@/lib/format';
 import { impulseTime } from '@/lib/insights';
-import { formatMoney, parseMoneyToCents } from '@/lib/money';
+import { formatMoney } from '@/lib/money';
 import type { Goal, Item } from '@/types';
 
 /** Goal percent for display: rounded, but never "100%" until the goal is actually reached. */
@@ -53,16 +53,4 @@ export function historyLine(item: Pick<Item, 'decision' | 'decidedAt' | 'thawAt'
   return `${verb} ${formatShortDate(decidedAt)} · waited ${formatDuration(decidedAt - impulseTime(item))}`;
 }
 
-/** Validated goal from the edit sheet's fields, or null (needs a name and an amount above zero). */
-export function parseGoalInput(name: string, amount: string): Goal | null {
-  const trimmed = name.trim().replace(/\s+/g, ' ');
-  const cents = parseMoneyToCents(amount);
-  if (!trimmed || cents == null || cents <= 0) return null;
-  return { name: trimmed.slice(0, 60), targetCents: cents };
-}
 
-/** The amount field's initial text for an existing goal: "1200" or "1200.50". */
-export function goalAmountText(targetCents: number | undefined): string {
-  if (targetCents == null || !(targetCents > 0)) return '';
-  return targetCents % 100 === 0 ? String(targetCents / 100) : (targetCents / 100).toFixed(2);
-}

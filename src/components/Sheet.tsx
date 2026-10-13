@@ -5,6 +5,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
@@ -20,9 +21,15 @@ import { Button, type ButtonVariant } from './Button';
 import { Icon, type IconName } from './Icon';
 import { IconButton } from './IconButton';
 import { bottomGap, FRAME_WIDTH, GUTTER } from './layout';
-import { springCalm, springPop, timingFade, useReducedMotion } from './motion';
+import { springCalm, springPop, springSheet, timingFade, useReducedMotion } from './motion';
 
 const BACKDROP = withAlpha(colors.plum900, 0.42);
+
+/**
+ * Cream panel that continues below the screen's bottom edge, so the sheet's spring overshoot
+ * (it lifts ~40pt at the top of its bounce) never exposes a band of scrim under the panel.
+ */
+const SHEET_SKIRT = 120;
 
 /**
  * Keeps a Modal mounted while its exit animation plays. `progress` animates 0 → 1 on show and
@@ -37,7 +44,7 @@ function useModalPresence(visible: boolean, reduced: boolean, enterSpring: boole
   useEffect(() => {
     if (visible) {
       progress.set(
-        reduced || !enterSpring ? withTiming(1, timingFade) : withSpring(1, { damping: 18, stiffness: 190 })
+        reduced || !enterSpring ? withTiming(1, timingFade) : withSpring(1, springSheet)
       );
     } else {
       progress.set(
@@ -77,12 +84,14 @@ export interface SheetProps {
 export function Sheet({ visible, onClose, title, subtitle, children, contentStyle, testID }: SheetProps) {
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const { mounted, progress } = useModalPresence(visible, reduced, true);
 
   const backdropStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, progress.get()) }));
   const panelStyle = useAnimatedStyle(() => {
     const v = progress.get();
-    return reduced ? { opacity: v } : { transform: [{ translateY: (1 - v) * 640 }] };
+    // Start fully below the screen whatever the panel's height (the skirt is already off-screen).
+    return reduced ? { opacity: v } : { transform: [{ translateY: (1 - v) * windowHeight }] };
   });
 
   if (!mounted) return null;
@@ -106,7 +115,15 @@ export function Sheet({ visible, onClose, title, subtitle, children, contentStyl
         </Animated.View>
         <View style={styles.sheetWrap}>
           <Animated.View
-            style={[styles.panel, { paddingBottom: bottomGap(insets.bottom), maxHeight: '92%' }, panelStyle]}
+            style={[
+              styles.panel,
+              {
+                paddingBottom: bottomGap(insets.bottom) + SHEET_SKIRT,
+                marginBottom: -SHEET_SKIRT,
+                maxHeight: windowHeight * 0.92 + SHEET_SKIRT,
+              },
+              panelStyle,
+            ]}
             accessibilityViewIsModal
             testID={testID}
           >

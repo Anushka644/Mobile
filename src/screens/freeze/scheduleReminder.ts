@@ -4,8 +4,8 @@
 
 import { Platform } from 'react-native';
 
-import { now } from '@/lib/clock';
-import { ensurePermission, scheduleThawNotification } from '@/lib/notifications';
+import { ensurePermission } from '@/lib/notifications';
+import { scheduleItemThawNotification } from '@/lib/thawSchedule';
 import { useChillStore } from '@/store/useChillStore';
 import type { Item } from '@/types';
 
@@ -32,7 +32,8 @@ export async function scheduleReminder(
       if (enabled) useChillStore.getState().updateSettings({ notificationsEnabled: true });
     }
     if (!enabled) return null;
-    const id = await scheduleThawNotification(item, now());
+    // thawAt is app time (maybe fast-forwarded); the OS fires on the device clock.
+    const id = await scheduleItemThawNotification(item);
     // The item may have been removed while the prompt was up.
     if (id && useChillStore.getState().items.some((i) => i.id === item.id)) {
       useChillStore.getState().setNotificationId(item.id, id);

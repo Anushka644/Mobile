@@ -1,5 +1,11 @@
 import { useChillStore } from '../../store/useChillStore';
-import { parseTestHooks, runTestHooks } from '../testHooks';
+import {
+  allowedTestHooks,
+  hasTestHookParams,
+  parseTestHooks,
+  runTestHooks,
+  stripTestHookParams,
+} from '../testHooks';
 
 const HOUR = 3_600_000;
 
@@ -64,5 +70,37 @@ describe('runTestHooks', () => {
     runTestHooks({ reset: true, seed: false, ffHours: null });
     expect(useChillStore.getState().settings.onboarded).toBe(false);
     expect(useChillStore.getState().items).toEqual([]);
+  });
+});
+
+describe('allowedTestHooks', () => {
+  const all = { reset: true, seed: true, ffHours: 25 };
+
+  it('QA builds run every hook', () => {
+    expect(allowedTestHooks(all, true, true)).toEqual(all);
+  });
+
+  it('public builds only seed, and only for a visitor who has not onboarded', () => {
+    expect(allowedTestHooks(all, false, false)).toEqual({ reset: false, seed: true, ffHours: null });
+    expect(allowedTestHooks(all, false, true)).toEqual({ reset: false, seed: false, ffHours: null });
+  });
+});
+
+describe('URL clean-up', () => {
+  it.each<[string, string]>([
+    ['', ''],
+    ['?seed=demo', ''],
+    ['?reset=1&seed=demo&ff=24', ''],
+    ['?seed=demo&utm=x', '?utm=x'],
+    ['?q=1&ff=2', '?q=1'],
+  ])('strips the hook params from %p', (search, expected) => {
+    expect(stripTestHookParams(search)).toBe(expected);
+  });
+
+  it('detects hook params', () => {
+    expect(hasTestHookParams('?seed=demo')).toBe(true);
+    expect(hasTestHookParams('?ff=')).toBe(true);
+    expect(hasTestHookParams('?utm=x')).toBe(false);
+    expect(hasTestHookParams('')).toBe(false);
   });
 });

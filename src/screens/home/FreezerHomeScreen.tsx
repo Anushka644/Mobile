@@ -3,7 +3,8 @@
 // Plain cream canvas (no glows). Header with the date caption, "Your freezer" and the counts; the
 // plum SavedBanner; "Ready to decide" ReadyBanners (max 3, then "+N more"); the "Cooling" 2-column
 // ItemCard grid, soonest first; or the empty state. Content scrolls under the floating tab bar
-// (bottom padding 130; the tab bar draws the 170pt cream fade).
+// (bottom padding 178 so the last row can clear the tab bar's 170pt cream fade; the centred empty
+// state keeps the spec's 130).
 //
 // Live: re-renders every 30s, every second while something thaws within the hour. When an item
 // thaws while Home is focused, its card flips to Ready in place (mint flash + sparkles, both built
@@ -68,7 +69,8 @@ export function FreezerHomeScreen() {
   const router = useRouter();
   const focused = useIsFocused();
   const { width } = useWindowDimensions();
-  const bottomPadding = useTabBarScrollPadding();
+  const scrollPadding = useTabBarScrollPadding();
+  const centeredPadding = useTabBarScrollPadding(true);
 
   const items = useChillStore((s) => s.items);
   const currency = useChillStore((s) => s.settings.currency);
@@ -88,6 +90,7 @@ export function FreezerHomeScreen() {
   const hiddenReady = readyList.length - readyVisible.length;
   const empty = grid.length === 0 && readyList.length === 0;
   const cardWidth = gridCardWidth(width);
+  const bottomPadding = empty ? centeredPadding : scrollPadding;
 
   return (
     <Screen scroll bottomPadding={bottomPadding} contentStyle={styles.content} testID="freezer-home">

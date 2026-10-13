@@ -40,21 +40,25 @@ export const CATEGORY_ACCENT: Record<Category, string> = {
   other: colors.lavender500,
 };
 
-/** Soft background per mood for round mood badges (e.g. the Thawed context card's 44 circle). */
+/**
+ * Soft background per mood for round mood badges — the one mood palette used app-wide (Thawed
+ * context card, Insights mood rows), following 06-insights: hyped coral (the spec's coral100
+ * context circle for the design's "Felt hyped"), bored butter, stressed lavender, sad ice, need mint.
+ */
 export const MOOD_TINT: Record<Mood, string> = {
-  bored: colors.lavender100,
-  sad: colors.ice100,
   hyped: colors.coral100,
-  stressed: colors.butter100,
+  bored: colors.butter100,
+  stressed: colors.lavender100,
+  sad: colors.ice100,
   need: colors.mint100,
 };
 
 /** Foreground for MOOD_TINT badges. */
 export const MOOD_INK: Record<Mood, string> = {
-  bored: colors.lavender500,
-  sad: colors.ice600,
   hyped: colors.coral500,
-  stressed: colors.butter600,
+  bored: colors.butter600,
+  stressed: colors.lavender500,
+  sad: colors.ice600,
   need: colors.mint700,
 };
 

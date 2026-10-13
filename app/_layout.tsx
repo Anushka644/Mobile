@@ -10,7 +10,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { now } from '@/lib/clock';
 import { isReady } from '@/lib/melt';
 import { subscribeToThawTaps } from '@/lib/notifications';
-import { installWebTestHooks } from '@/lib/testHooks';
+import { prunePhotos } from '@/lib/photos';
+import { installWebTestHooks, QA_BUILD } from '@/lib/testHooks';
 import { useChillStore, useHasHydrated } from '@/store/useChillStore';
 import { fonts } from '@/theme/fonts';
 import { colors } from '@/theme/tokens';
@@ -19,7 +20,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {
   // Already hidden (e.g. fast refresh) — nothing to do.
 });
 
-// Web: ?reset=1 / ?seed=demo / ?ff=<hours> run once, right when the store finishes hydrating.
+// Web: ?reset=1 / ?seed=demo / ?ff=<hours> run once, right when the store finishes hydrating
+// (public builds only honour ?seed=demo for a first-time visitor; see src/lib/testHooks.ts).
 installWebTestHooks();
 
 /** Thaw notification taps → the thawed decision (or the cooling item if it was thawed early elsewhere). */
@@ -44,6 +46,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
+  // Native: drop stored photos no item points to any more (a sheet closed after picking one).
+  useEffect(() => {
+    if (hydrated) prunePhotos(useChillStore.getState().items.map((i) => i.imageUri));
+  }, [hydrated]);
   useThawNotificationRouting(ready && onboarded);
 
   if (!ready) return null;
@@ -80,8 +86,10 @@ export default function RootLayout() {
           <Stack.Protected guard={!onboarded}>
             <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
           </Stack.Protected>
-          {/* Visual QA: always reachable. */}
-          <Stack.Screen name="dev/kit" />
+          {/* Visual QA kit: dev builds and QA exports (EXPO_PUBLIC_QA=1) only. */}
+          <Stack.Protected guard={QA_BUILD}>
+            <Stack.Screen name="dev/kit" />
+          </Stack.Protected>
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -33,7 +33,7 @@ import { GlowEllipse } from './Glow';
 import { glyphForItem } from './glyphs';
 import { Icon, type IconName } from './Icon';
 import { timingMelt, useReducedMotion } from './motion';
-import { productImageFor, ProductTile, toImageSource, type ProductImageSource } from './ProductImage';
+import { productImageFor, ProductTile, toImageSource, useImageFallback, type ProductImageSource } from './ProductImage';
 
 export interface CubeProps {
   /** Melt progress 0..1 (continuous; use meltProgress(item, now)). */
@@ -100,7 +100,8 @@ export const Cube = memo(function Cube({
   const target = clamp01(progress);
   const isThawed = thawed || target >= 1;
   const reduced = useReducedMotion();
-  const source = toImageSource(image);
+  // A photo that fails to load (e.g. its file is gone) falls back to the category tile.
+  const { source, onError: onImageError } = useImageFallback(toImageSource(image));
   const gradientId = `puddle${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
   const p = useSharedValue(target);
@@ -308,6 +309,7 @@ export const Cube = memo(function Cube({
               source={source}
               contentFit="contain"
               style={{ width: PRODUCT * k, height: PRODUCT * k }}
+              onError={onImageError}
               accessibilityIgnoresInvertColors
             />
           ) : (

@@ -1,7 +1,7 @@
 // The Freeze sheet's photo tile (spec §4.3, 11-freeze-sheet): a 108 dashed ice tile.
 // - Nothing yet: camera glyph + "Add photo".
-// - Once there is a name (or a photo): a live preview of the frozen cube — the photo, the bundled
-//   render for a demo name, or the category tile + glyph — with a "Photo" pill on the bottom edge.
+// - Once there is a name (or a photo): a live preview of the frozen cube — the photo, or the
+//   category tile + glyph — with a "Photo" pill on the bottom edge.
 // Tapping anywhere opens the image picker; a small × removes a picked photo.
 
 import { useEffect } from 'react';
@@ -14,7 +14,6 @@ import {
   glyphForItem,
   Icon,
   PressableScale,
-  productImageFor,
   useReducedMotion,
 } from '@/components';
 import { colors, radius, shadow } from '@/theme/tokens';
@@ -58,7 +57,9 @@ export function PhotoTile({ name, category, photoUri, onPick, onRemove, busy = f
     return { opacity: Math.max(0, 1 - v * 2), transform: [{ scale: 1 - 0.15 * v }] };
   });
 
-  const image = photoUri ?? productImageFor({ name: trimmed, imageUri: undefined });
+  // Your photo, else the category tile + glyph (as in 11-freeze-sheet) — the bundled renders are
+  // for the sample items only, so typing a demo name doesn't borrow one.
+  const image = photoUri;
   const glyph = glyphForItem({ name: trimmed, category });
 
   return (

@@ -4,7 +4,7 @@
 //   PREFERENCES  Default cooldown (sheet) · Currency (sheet) · Thaw reminders (toggle) · Savings goal (sheet)
 //   PLAY WITH IT Load sample freezer · Fast-forward 1 day · Reset everything (confirm)
 //   Why waiting works (sheet)
-// and the "Chill v1 · made with care" footer (long-press it for the component kit).
+// and the "Chill v1 · made with care" footer (in QA builds, long-press it for the component kit).
 // Demo actions confirm with a small toast above the tab bar.
 
 import { useRouter } from 'expo-router';
@@ -16,14 +16,17 @@ import { now, useTimeOffset } from '@/lib/clock';
 import { haptics } from '@/lib/haptics';
 import { DAY_MS } from '@/lib/melt';
 import { cancelAllNotifications } from '@/lib/notifications';
+import { prunePhotos } from '@/lib/photos';
+import { QA_BUILD } from '@/lib/testHooks';
+import { GoalSheet } from '@/screens/goal/GoalSheet';
 import { selectReady, selectSavedCents } from '@/store/selectors';
 import { useChillStore } from '@/store/useChillStore';
 import { colors } from '@/theme/tokens';
 
-import { setThawReminders } from './reminders';
+import { loadSampleFreezer, setThawReminders } from './reminders';
 import { SettingsCard, SettingsRow } from './SettingsCard';
 import { Toast, useToast } from './Toast';
-import { CooldownSheet, CurrencySheet, GoalSheet, WhyWaitingSheet } from './YouSheets';
+import { CooldownSheet, CurrencySheet, WhyWaitingSheet } from './YouSheets';
 import { currencyLabel, fastForwardMessage, goalRowValue, offsetLabel } from './youModel';
 
 type SheetName = 'cooldown' | 'currency' | 'goal' | 'why';
@@ -34,8 +37,6 @@ export function YouScreen() {
   const settings = useChillStore((s) => s.settings);
   const items = useChillStore((s) => s.items);
   const updateSettings = useChillStore((s) => s.updateSettings);
-  const setGoal = useChillStore((s) => s.setGoal);
-  const seedDemo = useChillStore((s) => s.seedDemo);
   const fastForward = useChillStore((s) => s.fastForward);
   const resetAll = useChillStore((s) => s.resetAll);
   const offset = useTimeOffset();
@@ -68,7 +69,7 @@ export function YouScreen() {
   };
 
   const loadSample = () => {
-    seedDemo();
+    void loadSampleFreezer();
     haptics.success();
     show({ text: 'Sample freezer loaded', icon: 'sparkle', action: { label: 'See it', onPress: () => router.navigate('/') } });
   };
@@ -91,6 +92,7 @@ export function YouScreen() {
     void cancelAllNotifications();
     // Flips settings.onboarded off: the root layout's guard swaps to onboarding.
     resetAll();
+    prunePhotos([]);
   };
 
   return (
@@ -134,12 +136,8 @@ export function YouScreen() {
               accessibilityRole="switch"
               accessibilityState={{ checked: remindersOn }}
               accessory={
-                <Toggle
-                  value={remindersOn}
-                  onValueChange={(v) => void toggleReminders(v)}
-                  accessibilityLabel="Thaw reminders"
-                  testID="you-reminders-toggle"
-                />
+                // Visual only: the whole row is the one switch (no switch nested in a switch).
+                <Toggle value={remindersOn} accessibilityLabel="Thaw reminders" testID="you-reminders-toggle" />
               }
               testID="you-reminders"
             />
@@ -209,7 +207,7 @@ export function YouScreen() {
           color={colors.text.tertiary}
           align="center"
           style={styles.footer}
-          onLongPress={() => router.push('/dev/kit')}
+          onLongPress={QA_BUILD ? () => router.push('/dev/kit') : undefined}
           suppressHighlighting
           testID="you-about"
         >
@@ -236,15 +234,6 @@ export function YouScreen() {
         goal={settings.goal}
         currency={settings.currency}
         savedCents={selectSavedCents({ items })}
-        onSave={(goal) => {
-          setGoal(goal);
-          haptics.success();
-          close();
-        }}
-        onRemove={() => {
-          setGoal(undefined);
-          close();
-        }}
         onClose={close}
       />
       <WhyWaitingSheet visible={sheet === 'why'} onClose={close} />

@@ -50,6 +50,7 @@ export function BoughtSection({ items, currency, initiallyOpen = false }: Bought
         hitSlop={8}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
+        aria-expanded={open}
         accessibilityLabel={`You bought, ${summary}`}
         testID="saved-bought-toggle"
       >

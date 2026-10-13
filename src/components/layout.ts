@@ -18,11 +18,21 @@ export const BOTTOM_GAP = 24;
 /** Floating tab bar height (spec §3 TabBar). */
 export const TAB_BAR_HEIGHT = 76;
 
-/** Bottom padding for scroll content on tab screens, so the last row clears the tab bar (spec §4.2: 130). */
-export const TAB_BAR_SCROLL_PADDING = 130;
-
 /** Height of the cream fade under the tab bar, anchored to the screen bottom (spec §4.2: 170). */
 export const TAB_BAR_FADE_HEIGHT = 170;
+
+/**
+ * Bottom padding for scroll content on tab screens. The spec's 130 clears the bar itself, but the
+ * last ~40pt would then never leave the 170pt cream fade (a washed-out last row / footer even at
+ * max scroll), so the padding covers the whole fade plus a little air. At rest nothing moves.
+ */
+export const TAB_BAR_SCROLL_PADDING = TAB_BAR_FADE_HEIGHT + 8;
+
+/**
+ * What a non-scrolling, vertically centred tab state (the empty freezer) reserves for the bar —
+ * the spec's 130, which the 13-freezer-empty frame is laid out around.
+ */
+export const TAB_BAR_CLEARANCE = 130;
 
 /**
  * Distance of bottom-anchored UI from the screen bottom for a given safe-area bottom inset:
@@ -38,9 +48,12 @@ export function useBottomGap(): number {
   return bottomGap(useSafeAreaInsets().bottom);
 }
 
-/** TAB_BAR_SCROLL_PADDING adjusted for the device (only grows under an Android 3-button nav bar). */
-export function useTabBarScrollPadding(): number {
-  return TAB_BAR_SCROLL_PADDING + (useBottomGap() - BOTTOM_GAP);
+/**
+ * TAB_BAR_SCROLL_PADDING adjusted for the device (only grows under an Android 3-button nav bar).
+ * `centered`: TAB_BAR_CLEARANCE instead, for a state centred in the space above the bar.
+ */
+export function useTabBarScrollPadding(centered = false): number {
+  return (centered ? TAB_BAR_CLEARANCE : TAB_BAR_SCROLL_PADDING) + (useBottomGap() - BOTTOM_GAP);
 }
 
 /** Top padding used on web, where there is no status bar to clear. */
