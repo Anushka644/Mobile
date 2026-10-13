@@ -56,7 +56,7 @@ describe('Freezer home', () => {
     await open();
     expect(screen.getByText('Your freezer')).toBeTruthy();
     expect(screen.getByText('4 wants cooling · 1 ready to decide')).toBeTruthy();
-    expect(screen.getByText('$934 saved')).toBeTruthy();
+    expect(screen.getByText('$934')).toBeTruthy();
     expect(screen.getByText('Ready to decide')).toBeTruthy();
     expect(screen.getByTestId('ready-demo-lamp')).toBeTruthy();
     expect(screen.getByText('Soonest first')).toBeTruthy();
@@ -87,7 +87,7 @@ describe('Freezer home', () => {
     await open();
     expect(screen.getByText('Nothing on ice right now')).toBeTruthy();
     expect(screen.getByText('Your freezer is empty')).toBeTruthy();
-    expect(screen.getByText(/ saved$/)).toBeTruthy();
+    expect(screen.getByText(/^saved by letting/)).toBeTruthy();
     expect(screen.queryByTestId('freezer-empty-tip')).toBeNull();
   });
 

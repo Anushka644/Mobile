@@ -7,7 +7,7 @@ import { Icon, type IconName } from './Icon';
 import { PressableScale, type HapticKind } from './PressableScale';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ice' | 'mint' | 'ghost';
-/** md = 60 high (Label/L), sm = 48 (Label/M), xs = 44 compact pill (Label/M, padding 16). */
+/** md = 56 high (Label/L), sm = 46 (Label/M), xs = 36 compact pill (Label/S, padding 14). */
 export type ButtonSize = 'md' | 'sm' | 'xs';
 
 export interface ButtonProps {
@@ -34,21 +34,21 @@ export interface ButtonProps {
 
 const VARIANTS: Record<ButtonVariant, { bg: ColorValue | undefined; fg: ColorValue; surface: ViewStyle }> = {
   primary: { bg: colors.action.primary, fg: colors.text.inverse, surface: shadow('button') },
-  secondary: { bg: colors.bg.surface, fg: colors.plum900, surface: shadow('raised') },
-  ice: { bg: colors.ice200, fg: colors.ice800, surface: shadow('iceGlow') },
-  mint: { bg: colors.mint500, fg: colors.plum900, surface: shadow('raised') },
+  secondary: { bg: colors.bg.surface, fg: colors.plum900, surface: shadow('soft') },
+  ice: { bg: colors.ice100, fg: colors.ice800, surface: {} },
+  mint: { bg: colors.ice600, fg: colors.white, surface: shadow('button') },
   ghost: { bg: undefined, fg: colors.plum500, surface: {} },
 };
 
 const SIZES: Record<ButtonSize, { height: number; padding: number; icon: number; text: keyof typeof typography }> = {
-  md: { height: 60, padding: 24, icon: 22, text: 'labelL' },
-  sm: { height: 48, padding: 20, icon: 18, text: 'labelM' },
-  xs: { height: 44, padding: 16, icon: 16, text: 'labelM' },
+  md: { height: 56, padding: 24, icon: 20, text: 'labelL' },
+  sm: { height: 46, padding: 20, icon: 18, text: 'labelM' },
+  xs: { height: 36, padding: 14, icon: 16, text: 'labelS' },
 };
 
 /**
- * Pill button (spec §3 Button): Primary (plum), Secondary (white), Ice, Mint, Ghost.
- * Press = spring.press; Ghost turns sunken (cream200) while pressed; disabled = 40% opacity.
+ * Pill button (v2): Primary (ink), Secondary (white + hairline), Ice (frost), Mint (ice-blue accent),
+ * Ghost (text). Press = spring.press; Ghost turns sunken while pressed; disabled = 40% opacity.
  */
 export function Button({
   label,
@@ -93,7 +93,7 @@ export function Button({
         <ActivityIndicator color={v.fg} />
       ) : (
         <View style={styles.row}>
-          {icon ? <Icon name={icon} size={s.icon} color={v.fg} strokeWidth={2.2} /> : null}
+          {icon ? <Icon name={icon} size={s.icon} color={v.fg} strokeWidth={1.9} /> : null}
           <AppText variant={s.text} color={v.fg} numberOfLines={1}>
             {label}
           </AppText>

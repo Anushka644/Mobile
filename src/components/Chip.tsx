@@ -1,6 +1,6 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors, radius } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
@@ -50,8 +50,8 @@ export function Chip({
   ];
   const content = (
     <>
-      {icon ? <Icon name={icon} size={18} color={fg} /> : null}
-      <AppText variant="labelM" color={fg} numberOfLines={1}>
+      {icon ? <Icon name={icon} size={16} color={fg} strokeWidth={1.7} /> : null}
+      <AppText variant="labelS" color={fg} numberOfLines={1}>
         {label}
       </AppText>
     </>
@@ -86,14 +86,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: radius.full,
-    minHeight: 44,
+    minHeight: 40,
   },
-  small: { paddingHorizontal: 14, paddingVertical: 8, minHeight: 36 },
-  unselected: { backgroundColor: colors.bg.surface, ...shadow('soft') },
-  selected: { backgroundColor: colors.action.primary, ...shadow('button') },
+  small: { paddingHorizontal: 12, paddingVertical: 7, minHeight: 34 },
+  unselected: {
+    backgroundColor: colors.bg.surface,
+    boxShadow: `inset 0px 0px 0px 1px ${colors.border.subtle}`,
+  },
+  selected: { backgroundColor: colors.action.primary },
   disabled: { opacity: 0.4 },
 });

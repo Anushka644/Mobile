@@ -6,9 +6,9 @@ import { Icon, type IconName } from './Icon';
 
 export interface IconBadgeProps {
   icon: IconName;
-  /** Background tint. Default ice100. */
+  /** Background tint. Default paper (sunken). */
   tint?: ColorValue;
-  /** Icon color. Default ice800. */
+  /** Icon color. Default ink. */
   color?: ColorValue;
   /** Box size. Default 44. Icon is ~half of it. */
   size?: number;
@@ -22,8 +22,8 @@ export interface IconBadgeProps {
 /** A tinted icon chip: e.g. the 44 coral100 mood circle, the 36 tinted squares on the You tab. */
 export function IconBadge({
   icon,
-  tint = colors.ice100,
-  color = colors.ice800,
+  tint = colors.bg.sunken,
+  color = colors.text.primary,
   size = 44,
   shape = 'circle',
   iconSize,
@@ -42,7 +42,7 @@ export function IconBadge({
         style,
       ]}
     >
-      <Icon name={icon} size={iconSize ?? Math.round(size * 0.5)} color={color} />
+      <Icon name={icon} size={iconSize ?? Math.round(size * 0.46)} color={color} />
     </View>
   );
 }

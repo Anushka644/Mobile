@@ -15,11 +15,11 @@ export const FRAME_WIDTH = 393;
  */
 export const BOTTOM_GAP = 24;
 
-/** Floating tab bar height (spec §3 TabBar). */
-export const TAB_BAR_HEIGHT = 76;
+/** Floating tab bar height (v2 glass capsule). */
+export const TAB_BAR_HEIGHT = 64;
 
 /** Height of the cream fade under the tab bar, anchored to the screen bottom (spec §4.2: 170). */
-export const TAB_BAR_FADE_HEIGHT = 170;
+export const TAB_BAR_FADE_HEIGHT = 150;
 
 /**
  * Bottom padding for scroll content on tab screens. The spec's 130 clears the bar itself, but the
@@ -32,7 +32,7 @@ export const TAB_BAR_SCROLL_PADDING = TAB_BAR_FADE_HEIGHT + 8;
  * What a non-scrolling, vertically centred tab state (the empty freezer) reserves for the bar —
  * the spec's 130, which the 13-freezer-empty frame is laid out around.
  */
-export const TAB_BAR_CLEARANCE = 130;
+export const TAB_BAR_CLEARANCE = 118;
 
 /**
  * Distance of bottom-anchored UI from the screen bottom for a given safe-area bottom inset:

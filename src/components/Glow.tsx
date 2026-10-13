@@ -54,47 +54,31 @@ export interface GlowPresetSpec {
   gradient?: FrameGradientSpec;
 }
 
-/** Same geometry for all three onboarding primary glows: 420 × 380 at (−40, 60), blur 70. */
-const ONBOARDING_PRIMARY = { x: -40, y: 60, width: 420, height: 380, blur: 70 } as const;
 
-/** The spec's "Background glows" table, one entry per screen. */
-export const GLOW_PRESETS = {
-  /** Plain canvas: Freezer home, Empty freezer, Insights, You (and the Freeze sheet). */
+/**
+ * v2 "frost minimal": no coloured glows. Every screen is plain paper; the few ice moments (an item
+ * cooling, the freezing moment, letting go) get one quiet vertical frost wash at the top instead.
+ */
+const FROST_WASH: FrameGradientSpec = {
+  colors: [colors.ice100, colors.cream100],
+  locations: [0, 1],
+  height: 420,
+};
+
+export const GLOW_PRESETS: Record<
+  'none' | 'item' | 'thawed' | 'letGo' | 'saved' | 'onboarding1' | 'onboarding2' | 'onboarding3' | 'frozen',
+  GlowPresetSpec
+> = {
   none: {},
-  /** Item cooling: lavender100 top glow over an ice backdrop gradient (top 470pt). */
-  item: {
-    top: colors.lavender100,
-    gradient: { colors: [colors.ice200, colors.ice100, colors.cream100], locations: [0, 0.62, 1], height: 470 },
-  },
-  /** Thawed decision: butter100 top glow + mint100 primary 420 × 380 at (−20, 90), blur 60. */
-  thawed: {
-    top: colors.butter100,
-    primary: { color: colors.mint100, x: -20, y: 90, width: 420, height: 380, blur: 60 },
-  },
-  /** Let-go celebration: mint100 → cream frame, butter100 top glow, mint500 primary 300 × 260 at (46, 300), blur 300. */
-  letGo: {
-    top: colors.butter100,
-    gradient: { colors: [colors.mint100, colors.cream100], locations: [0, 1] },
-    primary: { color: colors.mint500, x: 46, y: 300, width: 300, height: 260, blur: 300 },
-  },
-  /** Saved tab: mint100 top glow + lavender100 primary 473 × 344 at (−40, 106), blur 80. */
-  saved: {
-    top: colors.mint100,
-    primary: { color: colors.lavender100, x: -40, y: 106, width: 473, height: 344, blur: 80 },
-  },
-  /** Onboarding 1: lavender100 top + ice200 primary. */
-  onboarding1: { top: colors.lavender100, primary: { color: colors.ice200, ...ONBOARDING_PRIMARY } },
-  /** Onboarding 2: ice200 top + lavender100 primary. */
-  onboarding2: { top: colors.ice200, primary: { color: colors.lavender100, ...ONBOARDING_PRIMARY } },
-  /** Onboarding 3: butter100 top + mint100 primary. */
-  onboarding3: { top: colors.butter100, primary: { color: colors.mint100, ...ONBOARDING_PRIMARY } },
-  /** Frozen solid (freezing moment): ice200 → ice50 → cream frame, lavender100 top, ice400 glow under the cube. */
-  frozen: {
-    top: colors.lavender100,
-    gradient: { colors: [colors.ice200, colors.ice50, colors.cream100], locations: [0, 0.55, 1] },
-    primary: { color: colors.ice400, x: 66, y: 440, width: 260, height: 120, blur: 60 },
-  },
-} satisfies Record<string, GlowPresetSpec>;
+  item: { gradient: FROST_WASH },
+  thawed: {},
+  letGo: { gradient: FROST_WASH },
+  saved: {},
+  onboarding1: {},
+  onboarding2: {},
+  onboarding3: {},
+  frozen: { gradient: { colors: [colors.ice200, colors.ice50, colors.cream100], locations: [0, 0.5, 1] } },
+};
 
 export type GlowPreset = keyof typeof GLOW_PRESETS;
 

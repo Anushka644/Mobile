@@ -201,8 +201,8 @@ describe('rendering', () => {
       </>
     );
     expect(screen.getByText('$65 · thawed 2h ago')).toBeTruthy();
-    expect(screen.getByText('$934 saved')).toBeTruthy();
-    expect(screen.getByText('by letting 8 wants melt away')).toBeTruthy();
+    expect(screen.getByText('$934')).toBeTruthy();
+    expect(screen.getByText('saved by letting 8 wants melt away')).toBeTruthy();
     await fireEvent.press(screen.getByText('Decide'));
     expect(onDecide).toHaveBeenCalled();
   });
@@ -255,7 +255,7 @@ describe('rendering', () => {
         <ProgressBar progress={0.58} testID="bar" />
       </>
     );
-    expect(screen.getByTestId('jar')).toHaveProp('accessibilityLabel', 'Savings jar, 50% full');
+    expect(screen.getByTestId('jar')).toHaveProp('accessibilityLabel', 'Savings glass, 50% full');
     expect(screen.getByTestId('bar')).toHaveProp('accessibilityValue', { min: 0, max: 100, now: 58 });
   });
 

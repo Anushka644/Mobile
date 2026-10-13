@@ -27,39 +27,35 @@ export const CATEGORY_ICONS: Record<Category, IconName> = {
 };
 
 /**
- * Cube fallback tile color per category (spec §3 Cube → Product). Beauty uses coral300 rather than
- * the spec's coral100 so the white glyph stays legible.
+ * v2: category and mood marks are monochrome — the product photos carry the colour. Kept as maps so
+ * callers can still look them up per key.
  */
 export const CATEGORY_ACCENT: Record<Category, string> = {
-  fashion: colors.coral500,
-  tech: colors.lavender500,
-  home: colors.butter500,
-  beauty: colors.coral300,
-  food: colors.butter500,
-  fun: colors.mint500,
-  other: colors.lavender500,
+  fashion: colors.cream200,
+  tech: colors.cream200,
+  home: colors.cream200,
+  beauty: colors.cream200,
+  food: colors.cream200,
+  fun: colors.cream200,
+  other: colors.cream200,
 };
 
-/**
- * Soft background per mood for round mood badges — the one mood palette used app-wide (Thawed
- * context card, Insights mood rows), following 06-insights: hyped coral (the spec's coral100
- * context circle for the design's "Felt hyped"), bored butter, stressed lavender, sad ice, need mint.
- */
+/** Soft background per mood badge (v2: one quiet paper tone). */
 export const MOOD_TINT: Record<Mood, string> = {
-  hyped: colors.coral100,
-  bored: colors.butter100,
-  stressed: colors.lavender100,
-  sad: colors.ice100,
-  need: colors.mint100,
+  hyped: colors.cream200,
+  bored: colors.cream200,
+  stressed: colors.cream200,
+  sad: colors.cream200,
+  need: colors.cream200,
 };
 
 /** Foreground for MOOD_TINT badges. */
 export const MOOD_INK: Record<Mood, string> = {
-  hyped: colors.coral500,
-  bored: colors.butter600,
-  stressed: colors.lavender500,
-  sad: colors.ice600,
-  need: colors.mint700,
+  hyped: colors.plum900,
+  bored: colors.plum900,
+  stressed: colors.plum900,
+  sad: colors.plum900,
+  need: colors.plum900,
 };
 
 /** Name keywords → a more specific fallback glyph than the category's (the Figma uses footprints for sneakers, a pot for the air fryer). */

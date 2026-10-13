@@ -1,22 +1,24 @@
 // Font map for expo-font's useFonts(). Keys are the family names used in
 // tokens.ts (`fontFamily`), so `typography.*` styles resolve to these files.
 // Per-weight subpath imports keep unused weights out of the bundle.
-import { BricolageGrotesque_600SemiBold } from '@expo-google-fonts/bricolage-grotesque/600SemiBold';
-import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque/700Bold';
-import { BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque/800ExtraBold';
-import { Nunito_500Medium } from '@expo-google-fonts/nunito/500Medium';
-import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold';
-import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
-import { Nunito_800ExtraBold } from '@expo-google-fonts/nunito/800ExtraBold';
+import { Geist_300Light } from '@expo-google-fonts/geist/300Light';
+import { Geist_400Regular } from '@expo-google-fonts/geist/400Regular';
+import { Geist_500Medium } from '@expo-google-fonts/geist/500Medium';
+import { Geist_600SemiBold } from '@expo-google-fonts/geist/600SemiBold';
+import { GeistMono_400Regular } from '@expo-google-fonts/geist-mono/400Regular';
+import { GeistMono_500Medium } from '@expo-google-fonts/geist-mono/500Medium';
+import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif/400Regular';
+import { InstrumentSerif_400Regular_Italic } from '@expo-google-fonts/instrument-serif/400Regular_Italic';
 
 import { fontFamily } from './tokens';
 
 export const fonts = {
-  [fontFamily.displaySemiBold]: BricolageGrotesque_600SemiBold,
-  [fontFamily.displayBold]: BricolageGrotesque_700Bold,
-  [fontFamily.displayExtraBold]: BricolageGrotesque_800ExtraBold,
-  [fontFamily.bodyMedium]: Nunito_500Medium,
-  [fontFamily.bodySemiBold]: Nunito_600SemiBold,
-  [fontFamily.bodyBold]: Nunito_700Bold,
-  [fontFamily.bodyExtraBold]: Nunito_800ExtraBold,
+  [fontFamily.light]: Geist_300Light,
+  [fontFamily.regular]: Geist_400Regular,
+  [fontFamily.medium]: Geist_500Medium,
+  [fontFamily.displaySemiBold]: Geist_600SemiBold,
+  [fontFamily.serif]: InstrumentSerif_400Regular,
+  [fontFamily.serifItalic]: InstrumentSerif_400Regular_Italic,
+  [fontFamily.mono]: GeistMono_400Regular,
+  [fontFamily.monoMedium]: GeistMono_500Medium,
 };

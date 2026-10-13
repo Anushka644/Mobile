@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'rea
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { haptics } from '@/lib/haptics';
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -35,13 +35,12 @@ export function ReflectionCard({ prompt, onNext, eyebrow = 'While it melts', sty
   return (
     <View style={[styles.card, style]} testID={testID}>
       <View style={styles.eyebrow}>
-        <Icon name="sparkle" size={18} color={colors.lavender500} fill={colors.lavender500} />
-        <AppText variant="caption" color={colors.text.secondary}>
+        <AppText variant="caption" color={colors.text.tertiary}>
           {eyebrow}
         </AppText>
       </View>
       <Animated.View style={promptStyle}>
-        <AppText variant="titleM" accessibilityLiveRegion="polite">
+        <AppText variant="displayItalic" accessibilityLiveRegion="polite">
           {prompt}
         </AppText>
       </Animated.View>
@@ -56,10 +55,10 @@ export function ReflectionCard({ prompt, onNext, eyebrow = 'While it melts', sty
           hitSlop={10}
           style={styles.next}
         >
-          <AppText variant="labelS" color={colors.text.secondary}>
+          <AppText variant="labelS" color={colors.text.primary}>
             Another question
           </AppText>
-          <Icon name="chevron-right" size={16} color={colors.text.secondary} strokeWidth={2.4} />
+          <Icon name="refresh" size={14} color={colors.text.primary} />
         </Pressable>
       ) : null}
     </View>
@@ -68,11 +67,11 @@ export function ReflectionCard({ prompt, onNext, eyebrow = 'While it melts', sty
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.lavender100,
-    borderRadius: radius.lg,
-    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 4,
     gap: 12,
-    ...shadow('soft'),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border.strong,
   },
   eyebrow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   next: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },

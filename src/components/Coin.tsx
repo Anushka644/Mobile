@@ -1,10 +1,9 @@
 import { memo, useId } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, G, LinearGradient, Path, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { colors, withAlpha } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
-import { ICONS } from './icons';
 
 export interface CoinProps {
   /** Diameter. Default 40. */
@@ -17,85 +16,35 @@ export interface CoinProps {
 }
 
 /**
- * A savings coin (spec §3 Coin): butter500 rim, butter300 face (28/40), white top highlight,
- * butter700 bottom shade, embossed butter600 snowflake and a soft drop shadow.
+ * A saved drop (v2): what a let-go want melts into. An ice-blue droplet with a white highlight —
+ * the "coin" of the app, used in bursts, the glass and small stacks. Name kept for API stability.
  */
 export const Coin = memo(function Coin({ size = 40, rotate = 0, shadowed = true, style }: CoinProps) {
-  const id = `coin${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  const s = size / 40;
+  const id = `drop${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   return (
     <View
       style={[
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          transform: rotate ? [{ rotate: `${rotate}deg` }] : undefined,
-          boxShadow: shadowed ? `0px ${3 * s}px ${6 * s}px ${-1 * s}px ${withAlpha(colors.plum900, 0.28)}` : undefined,
-        },
+        { width: size, height: size, transform: rotate ? [{ rotate: `${rotate}deg` }] : undefined },
         style,
       ]}
     >
       <Svg width={size} height={size} viewBox="0 0 40 40">
         <Defs>
-          <LinearGradient id={`${id}rim`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={colors.butter300} />
-            <Stop offset="0.45" stopColor={colors.butter500} />
-            <Stop offset="1" stopColor={colors.butter500} />
-          </LinearGradient>
-          <LinearGradient id={`${id}face`} x1="0.2" y1="0" x2="0.8" y2="1">
-            <Stop offset="0" stopColor={colors.butter100} />
-            <Stop offset="0.5" stopColor={colors.butter300} />
-            <Stop offset="1" stopColor={colors.butter500} />
+          <LinearGradient id={`${id}f`} x1="0.2" y1="0" x2="0.8" y2="1">
+            <Stop offset="0" stopColor={colors.ice300} />
+            <Stop offset="1" stopColor={colors.ice600} />
           </LinearGradient>
         </Defs>
-        {/* rim + bottom edge shade */}
-        <Circle cx={20} cy={20} r={20} fill={`url(#${id}rim)`} />
-        <Path d="M0.4 24A20 20 0 0 0 39.6 24A21 21 0 0 1 0.4 24Z" fill={colors.butter700} opacity={0.45} />
-        {/* top highlight */}
+        {shadowed ? <Ellipse cx={20} cy={38} rx={9} ry={1.6} fill={colors.ice800} opacity={0.12} /> : null}
+        <Path d="M20 2.5C20 2.5 33 17.5 33 25.5A13 13 0 0 1 7 25.5C7 17.5 20 2.5 20 2.5Z" fill={`url(#${id}f)`} />
         <Path
-          d="M8 11.5A15 15 0 0 1 28 6"
+          d="M12.5 25.5A7.5 7.5 0 0 0 16.5 32"
           stroke={colors.white}
           strokeOpacity={0.85}
-          strokeWidth={2.4}
+          strokeWidth={2.2}
           strokeLinecap="round"
           fill="none"
         />
-        {/* face */}
-        <Circle cx={20} cy={20} r={14} fill={`url(#${id}face)`} />
-        <Circle cx={20} cy={20} r={14} stroke={colors.butter600} strokeOpacity={0.35} strokeWidth={1} fill="none" />
-        {/* embossed snowflake (light offset first, then the glyph) */}
-        <G transform="translate(12.2 12.6) scale(0.65)">
-          {ICONS.snowflake.map((shape, i) =>
-            'd' in shape ? (
-              <Path
-                key={`h${i}`}
-                d={shape.d}
-                stroke={colors.white}
-                strokeOpacity={0.6}
-                strokeWidth={2.4}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            ) : null
-          )}
-        </G>
-        <G transform="translate(12.2 12.2) scale(0.65)">
-          {ICONS.snowflake.map((shape, i) =>
-            'd' in shape ? (
-              <Path
-                key={`g${i}`}
-                d={shape.d}
-                stroke={colors.butter600}
-                strokeWidth={2.4}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            ) : null
-          )}
-        </G>
       </Svg>
     </View>
   );

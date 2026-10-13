@@ -9,7 +9,7 @@ export type PillTone = 'ice' | 'ready' | 'neutral';
 
 export interface PillProps {
   label: string;
-  /** ice = ice100/ice800 + clock, ready = mint100/mint700 + check, neutral = cream200/plum500. Default 'ice'. */
+  /** ice = frost/ice800, ready = ink/white, neutral = paper/ink500. Default 'ice'. */
   tone?: PillTone;
   /** Override the tone's default icon; pass null for none. */
   icon?: IconName | null;
@@ -18,18 +18,18 @@ export interface PillProps {
 }
 
 const TONES: Record<PillTone, { bg: ColorValue; fg: ColorValue; icon: IconName | null }> = {
-  ice: { bg: colors.ice100, fg: colors.ice800, icon: 'clock' },
-  ready: { bg: colors.mint100, fg: colors.mint700, icon: 'check' },
+  ice: { bg: colors.ice100, fg: colors.ice800, icon: null },
+  ready: { bg: colors.plum900, fg: colors.white, icon: null },
   neutral: { bg: colors.bg.sunken, fg: colors.plum500, icon: null },
 };
 
-/** Small status pill (spec §3 Pill): padding 12/8, gap 4, 16px icon, Label/S. */
+/** Small status pill (v2): padding 10/5, gap 4, 14px icon, Label/S. */
 export function Pill({ label, tone = 'ice', icon, style, testID }: PillProps) {
   const t = TONES[tone];
   const glyph = icon === undefined ? t.icon : icon;
   return (
     <View style={[styles.base, { backgroundColor: t.bg }, style]} testID={testID}>
-      {glyph ? <Icon name={glyph} size={16} color={t.fg} strokeWidth={2.4} /> : null}
+      {glyph ? <Icon name={glyph} size={14} color={t.fg} strokeWidth={2} /> : null}
       <AppText variant="labelS" color={t.fg} numberOfLines={1} tabular>
         {label}
       </AppText>
@@ -43,8 +43,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: radius.full,
   },
 });

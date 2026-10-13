@@ -15,7 +15,7 @@ export interface IconButtonProps {
   onPress?: () => void;
   /** surface = white + soft shadow, glass = frosted white 55%, inverse = plum with white icon. Default 'surface'. */
   variant?: IconButtonVariant;
-  /** Circle diameter. Default 48 (icon 24). */
+  /** Circle diameter. Default 44 (icon 20). */
   size?: number;
   /** Icon color override. */
   color?: ColorValue;
@@ -35,7 +35,7 @@ export function IconButton({
   accessibilityLabel,
   onPress,
   variant = 'surface',
-  size = 48,
+  size = 44,
   color,
   disabled,
   haptic = 'tap',
@@ -70,7 +70,7 @@ export function IconButton({
         <BlurView intensity={30} tint="light" style={[StyleSheet.absoluteFill, { borderRadius: size / 2 }]} />
       ) : null}
       <View style={[StyleSheet.absoluteFill, styles.noTouch, { backgroundColor: bg, borderRadius: size / 2 }]} />
-      <Icon name={icon} size={Math.round(size / 2)} color={fg} />
+      <Icon name={icon} size={Math.round(size * 0.46)} color={fg} />
     </PressableScale>
   );
 }

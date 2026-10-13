@@ -27,7 +27,7 @@ export function SectionHeader({
   variant = 'titleM',
   style,
 }: SectionHeaderProps) {
-  const dotTop = Math.round((typography[variant].lineHeight ?? 24) / 2) - 4;
+  const dotTop = Math.round((typography[variant].lineHeight ?? 24) / 2) - 3;
   return (
     <View style={[styles.row, style]} accessibilityRole="header">
       <View style={styles.title}>
@@ -44,7 +44,7 @@ export function SectionHeader({
             </AppText>
           </Pressable>
         ) : (
-          <AppText variant="labelS" color={colors.text.secondary}>
+          <AppText variant="caption" color={colors.text.tertiary}>
             {trailing}
           </AppText>
         )
@@ -55,6 +55,6 @@ export function SectionHeader({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  title: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, flexShrink: 1 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
+  title: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, flexShrink: 1 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
 });

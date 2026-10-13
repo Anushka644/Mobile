@@ -45,7 +45,7 @@ export function Toggle({ value, onValueChange, disabled, accessibilityLabel, sty
   }, [value, reduced, on]);
 
   const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(on.get(), [0, 1], [colors.plum100, colors.mint500]),
+    backgroundColor: interpolateColor(on.get(), [0, 1], [colors.cream300, colors.plum900]),
   }));
   const knobStyle = useAnimatedStyle(() => ({ transform: [{ translateX: on.get() * (TRACK_W - KNOB - INSET * 2) }] }));
 
@@ -96,14 +96,13 @@ const styles = StyleSheet.create({
     height: TRACK_H,
     borderRadius: TRACK_H / 2,
     padding: INSET,
-    boxShadow: `inset 0px 2px 3px 0px ${withAlpha(colors.plum900, 0.08)}`,
   },
   knob: {
     width: KNOB,
     height: KNOB,
     borderRadius: KNOB / 2,
     backgroundColor: colors.white,
-    boxShadow: `0px 2px 5px 0px ${withAlpha(colors.plum900, 0.2)}`,
+    boxShadow: `0px 1px 3px 0px ${withAlpha(colors.plum900, 0.18)}`,
   },
   disabled: { opacity: 0.4 },
   noTouch: { pointerEvents: 'none' },

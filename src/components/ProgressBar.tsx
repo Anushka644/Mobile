@@ -36,15 +36,15 @@ export interface ProgressBarProps {
 }
 
 const TONES: Record<ProgressTone, { track: string; fill: readonly [string, string]; inset: boolean }> = {
-  ice: { track: colors.ice100, fill: [colors.ice300, colors.ice600], inset: true },
-  mint: { track: colors.mint100, fill: [colors.mint500, colors.mint500], inset: false },
+  ice: { track: colors.ice100, fill: [colors.ice400, colors.ice600], inset: false },
+  mint: { track: colors.plum100, fill: [colors.plum900, colors.plum900], inset: false },
 };
 
 /** A pill progress track with a gradient fill (spec §4.4 countdown, §4.6/§4.7 goal bars). */
 export function ProgressBar({
   progress,
   tone = 'ice',
-  height = 12,
+  height = 6,
   width = '100%',
   animated = true,
   style,

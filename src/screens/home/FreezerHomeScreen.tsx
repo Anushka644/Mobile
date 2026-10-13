@@ -111,14 +111,14 @@ export function FreezerHomeScreen() {
             icon="bell"
             accessibilityLabel="Notification settings"
             onPress={() => router.navigate('/you')}
+            size={40}
             style={styles.bell}
           />
         </View>
 
         {saved > 0 ? (
           <Animated.View layout={MOVE} entering={SAVED_ENTER}>
-            {/* The kit banner pads 16 all round (88 tall); the Figma banner is 76 tall: 10 vertical. */}
-            <SavedBanner savedCents={saved} letGoCount={letGoCount} currency={currency} style={styles.saved} />
+            <SavedBanner savedCents={saved} letGoCount={letGoCount} currency={currency} />
           </Animated.View>
         ) : null}
 
@@ -132,7 +132,7 @@ export function FreezerHomeScreen() {
             testID="freezer-ready"
           >
             <Animated.View layout={MOVE}>
-              <SectionHeader title="Ready to decide" dotColor={colors.mint500} />
+              <SectionHeader title="Ready to decide" variant="titleS" dotColor={colors.ice600} />
             </Animated.View>
             {readyVisible.map((item) => (
               <Animated.View key={item.id} layout={MOVE} entering={BANNER_ENTER} exiting={SECTION_EXIT}>
@@ -163,7 +163,7 @@ export function FreezerHomeScreen() {
             testID="freezer-cooling"
           >
             <Animated.View layout={MOVE}>
-              <SectionHeader title="Cooling" trailing="Soonest first" />
+              <SectionHeader title="Cooling" variant="titleS" trailing="Soonest first" />
             </Animated.View>
             <View style={styles.grid}>
               {grid.map((item) => (
@@ -182,13 +182,12 @@ export function FreezerHomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: 22 },
-  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingTop: 4 },
+  content: { gap: 28 },
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingTop: 8 },
   headerText: { flex: 1 },
-  title: { marginTop: 3, marginBottom: 2 },
-  bell: { marginTop: -2 },
-  saved: { paddingVertical: 10 },
-  section: { gap: 13 },
+  title: { marginTop: 10, marginBottom: 4 },
+  bell: { marginTop: 0 },
+  section: { gap: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
   more: { alignItems: 'center', marginTop: -4 },
   moreButton: { alignSelf: 'center' },

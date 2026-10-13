@@ -1,6 +1,6 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors, radius, withAlpha } from '@/theme/tokens';
 import { COOLDOWN_KEYS, COOLDOWN_LABELS, type CooldownKey } from '@/types';
 
 import { AppText } from './AppText';
@@ -29,7 +29,7 @@ export interface CooldownPickerProps {
 
 /**
  * Four cooldown options (80 × 84, gap 11): "24 / hours", "3 / days", "1 / week", "30 / days".
- * Selected = ice200 + iceGlow + 2px ice300 border with ice800 text; unselected = white + soft.
+ * Selected = ink with white text; unselected = white with a hairline (v2).
  * Options flex to fill narrower columns. Plays the `selection` haptic.
  */
 export function CooldownPicker({ value, onChange, style, testID }: CooldownPickerProps) {
@@ -49,10 +49,10 @@ export function CooldownPicker({ value, onChange, style, testID }: CooldownPicke
             testID={testID ? `${testID}-${key}` : undefined}
             style={[styles.option, selected ? styles.selected : styles.unselected]}
           >
-            <AppText variant="numericM" color={selected ? colors.ice800 : colors.text.primary} tabular>
+            <AppText variant="numericM" color={selected ? colors.text.inverse : colors.text.primary} tabular>
               {t.value}
             </AppText>
-            <AppText variant="labelS" color={selected ? colors.ice800 : colors.text.secondary}>
+            <AppText variant="bodyS" color={selected ? withAlpha(colors.white, 0.7) : colors.text.secondary}>
               {t.unit}
             </AppText>
           </PressableScale>
@@ -63,17 +63,18 @@ export function CooldownPicker({ value, onChange, style, testID }: CooldownPicke
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 11 },
+  row: { flexDirection: 'row', gap: 8 },
   option: {
     flex: 1,
-    maxWidth: 80,
-    height: 84,
+    height: 72,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    borderWidth: 2,
+    gap: 1,
   },
-  selected: { backgroundColor: colors.ice200, borderColor: colors.ice300, ...shadow('iceGlow') },
-  unselected: { backgroundColor: colors.bg.surface, borderColor: 'transparent', ...shadow('soft') },
+  selected: { backgroundColor: colors.action.primary },
+  unselected: {
+    backgroundColor: colors.bg.surface,
+    boxShadow: `inset 0px 0px 0px 1px ${colors.border.subtle}`,
+  },
 });

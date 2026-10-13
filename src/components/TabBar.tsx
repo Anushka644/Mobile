@@ -25,7 +25,7 @@ import { PressableScale } from './PressableScale';
 /** Icon + label per tab route (file name under app/(tabs)). Unknown routes fall back to options.title. */
 export const TAB_META: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Freezer', icon: 'snowflake' },
-  saved: { label: 'Saved', icon: 'coins' },
+  saved: { label: 'Saved', icon: 'droplet' },
   insights: { label: 'Insights', icon: 'chart' },
   you: { label: 'You', icon: 'user-round' },
 };
@@ -91,7 +91,7 @@ export function TabBar({ state, descriptors, navigation, insets, fade = true }: 
       <View style={[styles.wrap, { bottom: gap }]} accessibilityRole="tablist">
         <View style={styles.bar}>
           <View style={[StyleSheet.absoluteFill, styles.clip]}>
-            {CAN_BLUR ? <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} /> : null}
+            {CAN_BLUR ? <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} /> : null}
             <View style={[StyleSheet.absoluteFill, styles.tint]} />
           </View>
           {routes.slice(0, half).map((_, i) => renderTab(i))}
@@ -103,7 +103,7 @@ export function TabBar({ state, descriptors, navigation, insets, fade = true }: 
               testID="tab-fab"
               style={styles.fab}
             >
-              <Icon name="plus" size={28} color={colors.text.inverse} strokeWidth={2.4} />
+              <Icon name="plus" size={22} color={colors.text.inverse} strokeWidth={2} />
             </PressableScale>
           </View>
           {routes.slice(half).map((_, i) => renderTab(half + i))}
@@ -132,11 +132,11 @@ function TabItem({
   const scale = useSharedValue(1);
   useEffect(() => {
     if (focused && !reduced) {
-      scale.set(withSequence(withTiming(1.15, { duration: 120 }), withSpring(1, springPop)));
+      scale.set(withSequence(withTiming(1.1, { duration: 110 }), withSpring(1, springPop)));
     }
   }, [focused, reduced, scale]);
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
-  const color = focused ? colors.plum900 : colors.plum300;
+  const color = focused ? colors.plum900 : colors.plum500;
 
   return (
     <Pressable
@@ -150,9 +150,9 @@ function TabItem({
       style={styles.tab}
     >
       <Animated.View style={iconStyle}>
-        <Icon name={icon} size={24} color={color} />
+        <Icon name={icon} size={22} color={color} strokeWidth={focused ? 1.9 : 1.6} />
       </Animated.View>
-      <AppText variant="caption" uppercase={false} color={color} numberOfLines={1} style={styles.label}>
+      <AppText variant="labelS" color={color} numberOfLines={1} style={styles.label}>
         {label}
       </AppText>
     </Pressable>
@@ -170,28 +170,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     pointerEvents: 'box-none',
   },
-  // Geometry measured off the Figma tab bar: 14 + 4 × 63.5 tabs + a 71 FAB slot + 14 = 353, which
-  // centres Freezer at 65.75 and the FAB at 196.5 on a 393 screen.
+  // A frosted glass capsule: 4 tabs around an ink + in the middle.
   bar: {
     width: '100%',
     maxWidth: 353,
     height: TAB_BAR_HEIGHT,
     borderRadius: radius.full,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    ...shadow('raised'),
+    boxShadow: [
+      `0px 0px 0px 1px ${withAlpha(colors.plum900, 0.06)}`,
+      `0px 16px 40px -16px ${withAlpha(colors.plum900, 0.22)}`,
+      `inset 0px 1px 0px 0px ${withAlpha(colors.white, 0.9)}`,
+    ].join(', '),
   },
   clip: { borderRadius: radius.full, overflow: 'hidden', pointerEvents: 'none' },
-  tint: { backgroundColor: withAlpha(colors.white, CAN_BLUR ? 0.92 : 0.97) },
-  tab: { flex: 1, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  fabSlot: { width: 71, alignItems: 'center', justifyContent: 'center' },
-  // Sentence-case labels drop Caption's +6% tracking (it is meant for UPPERCASE).
-  label: { letterSpacing: 0 },
+  tint: { backgroundColor: withAlpha(colors.white, CAN_BLUR ? 0.72 : 0.96) },
+  tab: { flex: 1, height: '100%', alignItems: 'center', justifyContent: 'center', gap: 3 },
+  fabSlot: { width: 64, alignItems: 'center', justifyContent: 'center' },
+  label: { fontSize: 10.5, lineHeight: 13, letterSpacing: 0 },
   fab: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: colors.action.primary,
     alignItems: 'center',
     justifyContent: 'center',

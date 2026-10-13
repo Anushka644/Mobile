@@ -29,7 +29,6 @@ import {
   AppText,
   Button,
   CoinBurst,
-  GLOW_PRESETS,
   ItemCube,
   Jar,
   jarLevel,
@@ -49,19 +48,6 @@ import { goalPercentLabel, goalToGoCaption, meltedAwayCaption, savedSoFar } from
 import { itemNoun } from '../thawed/thawedCopy';
 import { Twinkle } from './Twinkle';
 import { useCountUp } from './useCountUp';
-
-/**
- * Glow overrides, matched to 04-let-go@2x.png by sampling pixels around the jar:
- * - frame gradient: mint100 → cream by 60% of the frame (Figma "via 60%"; the kit preset fades over
- *   the full height, which leaves the bottom third green).
- * - primary glow: Figma's export renders the mint500 "blur 300" glow as tight as a CSS
- *   blur(100px) (≈ 0.44 mint beside the jar; the preset's blur(150px) gives ≈ 0.23 and washes the
- *   lower screen green), so the same ellipse is drawn with blur 200.
- */
-const LET_GO_GLOW = {
-  gradient: { colors: [colors.mint100, colors.cream100], locations: [0, 0.6] },
-  primary: { ...GLOW_PRESETS.letGo.primary, blur: 200 },
-} as const;
 
 const JAR_W = 220;
 const JAR_H = 262;
@@ -222,7 +208,7 @@ function LetGoCelebration({ item }: { item: Item }) {
   const sparklesOn = phase !== 'intro';
 
   return (
-    <Screen scroll glow="letGo" glowProps={LET_GO_GLOW} contentStyle={styles.content}>
+    <Screen scroll glow="letGo" contentStyle={styles.content}>
       <View style={styles.headline} testID="let-go-headline">
         <Animated.View entering={reduced ? FadeIn.duration(220) : FadeIn.duration(260)} style={styles.headText}>
           <AppText variant="caption" color={colors.text.success} align="center" numberOfLines={2}>

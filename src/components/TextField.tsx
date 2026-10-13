@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, radius, typography, withAlpha } from '@/theme/tokens';
+import { colors, radius, typography } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
@@ -107,21 +107,17 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 const styles = StyleSheet.create({
   container: { gap: 8 },
   field: {
-    height: 56,
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 16,
-    borderRadius: radius.md,
-    backgroundColor: colors.bg.sunken,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    boxShadow: [
-      `inset 0px 2px 4px 0px ${withAlpha(colors.plum900, 0.08)}`,
-      `inset 0px -1px 0px 0px ${withAlpha(colors.white, 0.6)}`,
-    ].join(', '),
+    borderRadius: radius.sm + 2,
+    backgroundColor: colors.bg.surface,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
   },
-  focused: { borderColor: colors.ice300, backgroundColor: colors.cream100 },
+  focused: { borderColor: colors.plum900 },
   error: { borderColor: colors.coral300 },
   disabled: { opacity: 0.5 },
   // While `displayValue` shows, the real text stays laid out (and tappable) but invisible.

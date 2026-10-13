@@ -35,7 +35,7 @@ function triggerSeed(trigger: BurstTrigger): number {
 // ---------------------------------------------------------------------------
 // Confetti
 
-const CONFETTI_COLORS = [colors.coral500, colors.mint500, colors.butter500, colors.lavender500] as const;
+const CONFETTI_COLORS = [colors.plum900, colors.ice600, colors.ice400, colors.ice300] as const;
 const GRAVITY = 1100; // px/s²
 
 export interface ConfettiProps {

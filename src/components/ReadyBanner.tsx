@@ -24,8 +24,8 @@ export interface ReadyBannerProps {
 }
 
 /**
- * "Ready to decide" row (spec §3 ReadyBanner): mint-bordered white card with a 76 mint stage
- * holding the thawed cube, the name, "$65 · thawed 2h ago" and a small plum Decide button.
+ * "Ready to decide" row (v2): a white card with a hairline, the clear tile, the name, a mono
+ * "$65 · thawed 2h ago" and a small ink Decide button.
  */
 export function ReadyBanner({ item, now, onDecide, animated = true, style, testID }: ReadyBannerProps) {
   const router = useRouter();
@@ -41,11 +41,9 @@ export function ReadyBanner({ item, now, onDecide, animated = true, style, testI
       testID={testID}
       style={[styles.card, style]}
     >
-      <View style={styles.stage}>
-        <ItemCube item={item} progress={1} thawed size={80} animated={animated} />
-      </View>
+      <ItemCube item={item} progress={1} thawed size={56} radius={14} animated={animated} />
       <View style={styles.text}>
-        <AppText variant="titleS" numberOfLines={1}>
+        <AppText variant="labelM" numberOfLines={1}>
           {item.name}
         </AppText>
         <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1}>
@@ -67,23 +65,13 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 12 - 2.5,
-    borderWidth: 2.5,
-    borderColor: colors.mint500,
-    borderRadius: radius.lg,
+    gap: 14,
+    padding: 10,
+    paddingRight: 12,
+    borderRadius: radius.md,
     backgroundColor: colors.bg.surface,
     ...shadow('raised'),
   },
-  stage: {
-    width: 76,
-    height: 76,
-    borderRadius: radius.md,
-    backgroundColor: colors.mint100,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-  },
-  text: { flex: 1, gap: 2 },
+  text: { flex: 1, gap: 3 },
   decide: { alignSelf: 'center' },
 });

@@ -37,21 +37,21 @@ describe('domain contract', () => {
 
 describe('tokens', () => {
   it('exposes primitive and semantic colors', () => {
-    expect(colors.cream100).toBe('#FFF4EC');
-    expect(colors.bg.canvas).toBe('#FFF4EC');
-    expect(colors.text.primary).toBe('#2B2140');
+    expect(colors.cream100).toBe('#F6F6F3');
+    expect(colors.bg.canvas).toBe('#F6F6F3');
+    expect(colors.text.primary).toBe('#111113');
   });
 
   it('converts letter spacing percent to px', () => {
-    expect(typography.displayXL.letterSpacing).toBeCloseTo(-1.44);
-    expect(typography.caption.letterSpacing).toBeCloseTo(0.66);
-    expect(typography.bodyM.letterSpacing).toBe(0);
+    expect(typography.displayXL.letterSpacing).toBeCloseTo(-1.12);
+    expect(typography.caption.letterSpacing).toBeCloseTo(0.44);
+    expect(typography.bodyS.letterSpacing).toBe(0);
   });
 
   it('has spacing, radius and shadows', () => {
     expect(space[16]).toBe(16);
     expect(radius['2xl']).toBe(48);
-    expect(shadows.iceGlow.boxShadow).toBe('0px 16px 32px -6px rgba(143, 211, 255, 0.45)');
+    expect(shadows.iceGlow.boxShadow).toBe('0px 0px 0px 1px rgba(26, 79, 158, 0.06)');
   });
 });
 

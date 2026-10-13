@@ -1,50 +1,55 @@
-// Chill design tokens — mirrored from the Figma design system.
-// Keep values in sync with Figma; do not hand-tune in components.
+// Chill design tokens — v2 "frost minimal" (docs/DESIGN_SYSTEM_V2.md).
+// One quiet system: paper canvas, ink type and actions, a single ice-blue accent. Do not hand-tune
+// colors in components; add a token instead.
 import type { TextStyle, ViewStyle } from 'react-native';
 
 // ---------------------------------------------------------------------------
 // Colors
 
 export const palette = {
-  cream50: '#FFFBF7',
-  cream100: '#FFF4EC',
-  cream200: '#FBE8D9',
-  cream300: '#F3D9C4',
+  // v2 "frost minimal": the legacy family names are kept so every screen restyles at once, but the
+  // values now form one quiet system — paper, ink, and a single ice-blue accent.
+  /** Paper: canvas and quiet fills. */
+  cream50: '#FBFBF9',
+  cream100: '#F6F6F3',
+  cream200: '#EEEEEA',
+  cream300: '#E2E2DD',
 
-  plum900: '#2B2140',
-  plum700: '#4A3D63',
-  plum500: '#7A6E8F',
-  plum300: '#B5ACC4',
-  plum100: '#ECE7F2',
+  /** Ink: text, primary actions, hairlines. */
+  plum900: '#111113',
+  plum700: '#2E2E33',
+  plum500: '#6F6F76',
+  plum300: '#A9A9AF',
+  plum100: '#E8E8E4',
 
-  coral500: '#FF8A65',
-  coral300: '#FFB59C',
-  coral100: '#FFE5DB',
+  /** Destructive only. */
+  coral500: '#E5484D',
+  coral300: '#F2A3A5',
+  coral100: '#FCECEC',
 
-  lavender500: '#9B8CFF',
-  lavender300: '#C7BEFF',
-  lavender100: '#ECE9FF',
+  /** Accent (ice blue). */
+  lavender500: '#2B74E0',
+  lavender300: '#A9C9F2',
+  lavender100: '#EDF3FB',
 
-  mint700: '#2E9C7E',
-  mint500: '#6FD6B8',
-  mint300: '#A9E8D5',
-  mint100: '#DDF6EE',
+  mint700: '#2B74E0',
+  mint500: '#5B9BEF',
+  mint300: '#B4D0F4',
+  mint100: '#EDF3FB',
 
-  /** Coin edge shade (Coin: bottom rim, used at 0.45 alpha). */
-  butter700: '#C9861A',
-  /** Coin embossed snowflake. */
-  butter600: '#D99A2B',
-  butter500: '#FFD36E',
-  butter300: '#FFE4A3',
-  butter100: '#FFF4D6',
+  butter700: '#1A4F9E',
+  butter600: '#2B74E0',
+  butter500: '#8AB6E6',
+  butter300: '#C6DBF3',
+  butter100: '#F0F5FB',
 
-  ice50: '#F3FAFF',
-  ice100: '#EAF6FF',
-  ice200: '#CDEBFF',
-  ice300: '#A8DCFF',
-  ice400: '#8FD3FF',
-  ice600: '#4FA9E6',
-  ice800: '#2A6FA3',
+  ice50: '#F3F7FB',
+  ice100: '#E9F0F7',
+  ice200: '#D6E4F1',
+  ice300: '#B9D1E8',
+  ice400: '#8AB6E6',
+  ice600: '#2B74E0',
+  ice800: '#1A4F9E',
 
   white: '#FFFFFF',
 } as const;
@@ -62,12 +67,12 @@ export const semantic = {
     secondary: palette.plum500,
     tertiary: palette.plum300,
     inverse: palette.white,
-    ice: palette.ice800,
-    success: palette.mint700,
+    ice: palette.ice600,
+    success: palette.ice600,
   },
   border: {
     subtle: palette.plum100,
-    strong: palette.plum300,
+    strong: '#CFCFCA',
     ice: palette.ice300,
   },
   accent: {
@@ -93,8 +98,8 @@ export const semantic = {
     secondary: palette.white,
   },
   status: {
-    success: palette.mint500,
-    warning: palette.butter500,
+    success: palette.ice600,
+    warning: palette.ice400,
     danger: palette.coral500,
   },
 } as const;
@@ -146,13 +151,23 @@ export type RadiusKey = keyof typeof radius;
 // families — the weight is baked into each family (Android would fall back).
 
 export const fontFamily = {
-  displaySemiBold: 'BricolageGrotesque_600SemiBold',
-  displayBold: 'BricolageGrotesque_700Bold',
-  displayExtraBold: 'BricolageGrotesque_800ExtraBold',
-  bodyMedium: 'Nunito_500Medium',
-  bodySemiBold: 'Nunito_600SemiBold',
-  bodyBold: 'Nunito_700Bold',
-  bodyExtraBold: 'Nunito_800ExtraBold',
+  /** Geist — the UI face. Legacy role names map onto its weights. */
+  displaySemiBold: 'Geist_600SemiBold',
+  displayBold: 'Geist_600SemiBold',
+  displayExtraBold: 'Geist_600SemiBold',
+  bodyMedium: 'Geist_400Regular',
+  bodySemiBold: 'Geist_500Medium',
+  bodyBold: 'Geist_500Medium',
+  bodyExtraBold: 'Geist_600SemiBold',
+  light: 'Geist_300Light',
+  regular: 'Geist_400Regular',
+  medium: 'Geist_500Medium',
+  /** Instrument Serif — editorial display moments (titles, questions, big feelings). */
+  serif: 'InstrumentSerif_400Regular',
+  serifItalic: 'InstrumentSerif_400Regular_Italic',
+  /** Geist Mono — captions, time, money in lists. */
+  mono: 'GeistMono_400Regular',
+  monoMedium: 'GeistMono_500Medium',
 } as const;
 
 export type FontFamilyKey = keyof typeof fontFamily;
@@ -174,42 +189,46 @@ const textStyle = (
 });
 
 export const typography = {
-  /** Display/XL — Bricolage Grotesque ExtraBold 48/50, -3% */
-  displayXL: textStyle(fontFamily.displayExtraBold, 48, 50, -3),
-  /** Display/L — Bricolage Grotesque ExtraBold 36/40, -2.5% */
-  displayL: textStyle(fontFamily.displayExtraBold, 36, 40, -2.5),
-  /** Title/L — Bricolage Grotesque Bold 26/30, -1.5% */
-  titleL: textStyle(fontFamily.displayBold, 26, 30, -1.5),
-  /** Title/M — Bricolage Grotesque Bold 20/24, -1% */
-  titleM: textStyle(fontFamily.displayBold, 20, 24, -1),
-  /** Title/S — Bricolage Grotesque SemiBold 17/22, -0.5% */
-  titleS: textStyle(fontFamily.displaySemiBold, 17, 22, -0.5),
-  /** Numeric/XL — Bricolage Grotesque ExtraBold 64/64, -4% */
-  numericXL: textStyle(fontFamily.displayExtraBold, 64, 64, -4),
-  /** Numeric/L — Bricolage Grotesque ExtraBold 40/44, -3% */
-  numericL: textStyle(fontFamily.displayExtraBold, 40, 44, -3),
-  /** Numeric/M — Bricolage Grotesque Bold 22/26, -1% */
-  numericM: textStyle(fontFamily.displayBold, 22, 26, -1),
-  /** Body/L — Nunito SemiBold 17/24 */
-  bodyL: textStyle(fontFamily.bodySemiBold, 17, 24),
-  /** Body/M — Nunito Medium 15/22 */
-  bodyM: textStyle(fontFamily.bodyMedium, 15, 22),
-  /** Body/S — Nunito SemiBold 13/18 */
-  bodyS: textStyle(fontFamily.bodySemiBold, 13, 18),
-  /** Label/L — Nunito ExtraBold 17/22 */
-  labelL: textStyle(fontFamily.bodyExtraBold, 17, 22),
-  /** Label/M — Nunito Bold 15/20 */
-  labelM: textStyle(fontFamily.bodyBold, 15, 20),
-  /** Label/S — Nunito Bold 13/16 */
-  labelS: textStyle(fontFamily.bodyBold, 13, 16),
-  /** Caption — Nunito ExtraBold 11/14, +6% */
-  caption: textStyle(fontFamily.bodyExtraBold, 11, 14, 6),
+  /** Display/XL — Instrument Serif 56/56, -2% */
+  displayXL: textStyle(fontFamily.serif, 56, 56, -2),
+  /** Display/L — Instrument Serif 42/44, -1.5% (screen titles, big questions) */
+  displayL: textStyle(fontFamily.serif, 42, 44, -1.5),
+  /** Display/Italic — Instrument Serif Italic 28/32 (reflections, asides) */
+  displayItalic: textStyle(fontFamily.serifItalic, 28, 32, -1),
+  /** Title/L — Geist SemiBold 24/28, -3% */
+  titleL: textStyle(fontFamily.displaySemiBold, 24, 28, -3),
+  /** Title/M — Geist SemiBold 19/24, -2% */
+  titleM: textStyle(fontFamily.displaySemiBold, 19, 24, -2),
+  /** Title/S — Geist Medium 16/21, -1.5% */
+  titleS: textStyle(fontFamily.medium, 16, 21, -1.5),
+  /** Numeric/XL — Geist Light 72/72, -5% */
+  numericXL: textStyle(fontFamily.light, 72, 72, -5),
+  /** Numeric/L — Geist Light 44/48, -4% */
+  numericL: textStyle(fontFamily.light, 44, 48, -4),
+  /** Numeric/M — Geist Medium 20/24, -2% */
+  numericM: textStyle(fontFamily.medium, 20, 24, -2),
+  /** Body/L — Geist Regular 17/24, -1% */
+  bodyL: textStyle(fontFamily.regular, 17, 24, -1),
+  /** Body/M — Geist Regular 15/21, -0.5% */
+  bodyM: textStyle(fontFamily.regular, 15, 21, -0.5),
+  /** Body/S — Geist Regular 13/18 */
+  bodyS: textStyle(fontFamily.regular, 13, 18, 0),
+  /** Label/L — Geist Medium 16/20, -1% */
+  labelL: textStyle(fontFamily.medium, 16, 20, -1),
+  /** Label/M — Geist Medium 15/20, -0.5% */
+  labelM: textStyle(fontFamily.medium, 15, 20, -0.5),
+  /** Label/S — Geist Medium 13/16 */
+  labelS: textStyle(fontFamily.medium, 13, 16, 0),
+  /** Caption — Geist Mono Medium 11/14, +4%, uppercase */
+  caption: textStyle(fontFamily.monoMedium, 11, 14, 4),
+  /** Mono — Geist Mono 13/16 (time left, prices in lists) */
+  mono: textStyle(fontFamily.mono, 13, 16, -1),
 } satisfies Record<string, TextStyle>;
 
 export type TypographyVariant = keyof typeof typography;
 
 // ---------------------------------------------------------------------------
-// Shadows ("clay")
+// Shadows (v2: hairline depth, no clay)
 // `boxShadow` is the exact multi-layer Figma effect as a CSS string. RN 0.76+
 // (New Architecture, which Expo SDK 57 always uses) and react-native-web both
 // render it, including spread and inset layers. `native` is a single-layer
@@ -229,56 +248,55 @@ export interface ShadowToken {
 }
 
 export const shadows = {
-  /** Clay/Raised — cards and tiles that sit on the canvas. */
+  /** Raised — cards on the canvas: a hairline lift, nothing more. */
   raised: {
     boxShadow: [
-      `0px 14px 28px -6px ${rgba(palette.plum900, 0.1)}`,
-      `0px 3px 6px 0px ${rgba(palette.plum900, 0.06)}`,
-      `inset 0px 2px 2px 0px ${rgba(palette.white, 0.9)}`,
-      `inset 0px -6px 12px 0px ${rgba(palette.plum900, 0.06)}`,
+      `0px 0px 0px 1px ${rgba(palette.plum900, 0.04)}`,
+      `0px 1px 2px 0px ${rgba(palette.plum900, 0.04)}`,
+      `0px 12px 32px -16px ${rgba(palette.plum900, 0.12)}`,
     ].join(', '),
     native: {
       shadowColor: palette.plum900,
-      shadowOffset: { width: 0, height: 14 },
-      shadowOpacity: 0.1,
-      shadowRadius: 14,
-      elevation: 6,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 2,
     },
   },
-  /** Clay/Soft — subtle lift for chips, inputs, small surfaces. */
+  /** Soft — chips, inputs, small floating surfaces. */
   soft: {
-    boxShadow: `0px 8px 20px -4px ${rgba(palette.plum900, 0.07)}`,
-    native: {
-      shadowColor: palette.plum900,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.07,
-      shadowRadius: 10,
-      elevation: 3,
-    },
-  },
-  /** Clay/Button — primary pressables. */
-  button: {
     boxShadow: [
-      `0px 10px 18px -4px ${rgba(palette.plum900, 0.22)}`,
-      `0px 2px 3px 0px ${rgba(palette.plum900, 0.12)}`,
+      `0px 0px 0px 1px ${rgba(palette.plum900, 0.05)}`,
+      `0px 2px 6px -2px ${rgba(palette.plum900, 0.08)}`,
     ].join(', '),
     native: {
       shadowColor: palette.plum900,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.22,
-      shadowRadius: 9,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      elevation: 1,
     },
   },
-  /** Ice/Glow — the frozen ice cube. */
-  iceGlow: {
-    boxShadow: `0px 16px 32px -6px ${rgba(palette.ice400, 0.45)}`,
+  /** Button — primary pressables sit flat; a whisper of depth. */
+  button: {
+    boxShadow: `0px 1px 2px 0px ${rgba(palette.plum900, 0.14)}`,
     native: {
-      shadowColor: palette.ice400,
-      shadowOffset: { width: 0, height: 16 },
-      shadowOpacity: 0.45,
-      shadowRadius: 16,
-      elevation: 8,
+      shadowColor: palette.plum900,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.14,
+      shadowRadius: 1,
+      elevation: 1,
+    },
+  },
+  /** Ice — the frost tile. */
+  iceGlow: {
+    boxShadow: `0px 0px 0px 1px ${rgba(palette.ice800, 0.06)}`,
+    native: {
+      shadowColor: palette.ice800,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.06,
+      shadowRadius: 1,
+      elevation: 0,
     },
   },
 } satisfies Record<string, ShadowToken>;

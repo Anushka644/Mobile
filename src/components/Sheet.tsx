@@ -23,7 +23,7 @@ import { IconButton } from './IconButton';
 import { bottomGap, FRAME_WIDTH, GUTTER } from './layout';
 import { springCalm, springPop, springSheet, timingFade, useReducedMotion } from './motion';
 
-const BACKDROP = withAlpha(colors.plum900, 0.42);
+const BACKDROP = withAlpha(colors.plum900, 0.32);
 
 /**
  * Cream panel that continues below the screen's bottom edge, so the sheet's spring overshoot
@@ -280,8 +280,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: FRAME_WIDTH + 80,
     backgroundColor: colors.bg.canvas,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
     paddingTop: 26,
     paddingHorizontal: GUTTER,
     ...shadow('raised'),
@@ -291,9 +291,9 @@ const styles = StyleSheet.create({
     top: 10,
     alignSelf: 'center',
     width: 36,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.plum300,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.cream300,
   },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 },
   headerText: { flex: 1, gap: 4, paddingTop: 4 },

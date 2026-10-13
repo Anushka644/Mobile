@@ -16,7 +16,7 @@ export interface IconProps {
   size?: number;
   /** Stroke color. Default text.primary (plum900). */
   color?: ColorValue;
-  /** Stroke width in grid units (scaled with size). Default 2. */
+  /** Stroke width in grid units (scaled with size). Default 1.75 (v2: finer line). */
   strokeWidth?: number;
   /** Optional fill (e.g. a solid sparkle). Default none. */
   fill?: ColorValue;
@@ -31,7 +31,7 @@ export const Icon = memo(function Icon({
   name,
   size = 24,
   color = colors.text.primary,
-  strokeWidth = 2,
+  strokeWidth = 1.75,
   fill = 'none',
   opacity,
   style,

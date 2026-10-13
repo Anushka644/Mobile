@@ -1,11 +1,10 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { resolvePhotoUri } from '@/lib/photos';
 import { DEMO_IMAGE_KEYS, isDemoItem } from '@/store/demo';
-import { colors, radius as radii, withAlpha } from '@/theme/tokens';
+import { colors, radius as radii } from '@/theme/tokens';
 import type { Category, Item } from '@/types';
 
 import { CATEGORY_ACCENT, CATEGORY_ICONS, glyphForItem } from './glyphs';
@@ -75,45 +74,19 @@ export interface ProductTileProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * The fallback product: a clay tile in the category accent with an inner highlight and a white
- * glyph (40 at 92, stroke 2.2, opacity 0.92) — spec §3 Cube → Product.
- */
+/** The fallback product: a quiet paper tile with a thin ink glyph (v2). */
 export function ProductTile({ category, glyph, size = 92, style }: ProductTileProps) {
-  const accent = CATEGORY_ACCENT[category];
-  const k = size / 92;
-  const r = 30 * k;
+  const r = Math.round(size * 0.26);
   return (
     <View
-      style={[
-        {
-          width: size,
-          height: size,
-          borderRadius: r,
-          backgroundColor: accent,
-          boxShadow: [
-            `inset 0px ${5 * k}px ${8 * k}px 0px ${withAlpha(colors.white, 0.45)}`,
-            `inset 0px ${-7 * k}px ${12 * k}px 0px ${withAlpha(colors.plum900, 0.1)}`,
-            `0px ${8 * k}px ${16 * k}px ${-5 * k}px ${withAlpha(colors.plum900, 0.22)}`,
-          ].join(', '),
-        },
-        styles.center,
-        style,
-      ]}
+      style={[{ width: size, height: size, borderRadius: r, backgroundColor: CATEGORY_ACCENT[category] }, styles.center, style]}
     >
-      <LinearGradient
-        colors={[withAlpha(colors.white, 0.3), withAlpha(colors.white, 0)]}
-        locations={[0, 0.6]}
-        start={{ x: 0.2, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: r }, styles.noTouch]}
-      />
       <Icon
         name={glyph ?? CATEGORY_ICONS[category]}
-        size={Math.round(40 * k)}
-        color={colors.white}
-        strokeWidth={2.2}
-        opacity={0.92}
+        size={Math.round(size * 0.42)}
+        color={colors.plum900}
+        strokeWidth={1.5}
+        opacity={0.6}
       />
     </View>
   );
@@ -125,23 +98,24 @@ export interface ProductThumbProps {
   item: Pick<Item, 'id' | 'name' | 'imageUri' | 'category'>;
   /** Default 48. */
   size?: number;
-  /** Background behind a picture. Default cream200 (sunken). */
+  /** Background behind a picture. Default ice50 (the frost tile's clear glass). */
   background?: string;
   style?: StyleProp<ViewStyle>;
 }
 
 /** Small square thumbnail for lists (Saved "Melted away" rows): picture on a soft tile, or the category tile. */
-export function ProductThumb({ item, size = 48, background = colors.bg.sunken, style }: ProductThumbProps) {
+export function ProductThumb({ item, size = 48, background = colors.ice50, style }: ProductThumbProps) {
   const { source, onError } = useImageFallback(productImageFor(item));
   if (!source) return <ProductTile category={item.category} glyph={glyphForItem(item)} size={size} style={style} />;
-  const isPhoto = typeof source !== 'number';
+  // A user photo fills the thumb; a bundled render sits inside it (on web both are objects).
+  const isPhoto = !!item.imageUri;
   return (
     <View
       style={[
         {
           width: size,
           height: size,
-          borderRadius: Math.min(radii.md, size * 0.33),
+          borderRadius: Math.min(radii.md, Math.round(size * 0.26)),
           backgroundColor: background,
           overflow: 'hidden',
         },
@@ -152,7 +126,7 @@ export function ProductThumb({ item, size = 48, background = colors.bg.sunken, s
       <Image
         source={source}
         contentFit={isPhoto ? 'cover' : 'contain'}
-        style={isPhoto ? StyleSheet.absoluteFill : { width: size * 0.82, height: size * 0.82 }}
+        style={isPhoto ? StyleSheet.absoluteFill : { width: size * 0.72, height: size * 0.72 }}
         onError={onError}
         accessibilityIgnoresInvertColors
         testID="product-photo"
