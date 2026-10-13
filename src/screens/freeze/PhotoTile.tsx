@@ -54,7 +54,8 @@ export function PhotoTile({ name, category, photoUri, onPick, onRemove, busy = f
   });
   const emptyStyle = useAnimatedStyle(() => {
     const v = Math.min(1, Math.max(0, shown.get()));
-    return { opacity: 1 - v, transform: [{ scale: 1 - 0.15 * v }] };
+    // Gone well before the cube settles, so the label never ghosts through the translucent ice.
+    return { opacity: Math.max(0, 1 - v * 2), transform: [{ scale: 1 - 0.15 * v }] };
   });
 
   const image = photoUri ?? productImageFor({ name: trimmed, imageUri: undefined });

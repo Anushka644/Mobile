@@ -136,6 +136,7 @@ export function FreezerHomeScreen() {
                   variant="ghost"
                   size="xs"
                   onPress={() => setShowAllReady(!showAllReady)}
+                  style={styles.moreButton}
                 />
               </Animated.View>
             ) : null}
@@ -180,4 +181,5 @@ const styles = StyleSheet.create({
   section: { gap: 13 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
   more: { alignItems: 'center', marginTop: -4 },
+  moreButton: { alignSelf: 'center' },
 });

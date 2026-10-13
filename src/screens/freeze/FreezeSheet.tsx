@@ -63,8 +63,11 @@ import { scheduleReminder, willNudge } from './scheduleReminder';
 import { SheetChrome } from './SheetChrome';
 import { useKeyboardOverlap } from './useKeyboardOverlap';
 
-/** Text inputs that may need scrolling into view above the keyboard. */
-type FieldKey = 'details' | 'link';
+/** Blocks holding text inputs that may need scrolling into view above the keyboard. */
+type FieldKey = 'details';
+
+/** How long the top slot waits for the clipboard before showing the link field. */
+const CLIPBOARD_WAIT_MS = 250;
 
 /** Space the sticky CTA takes at the bottom of the scroll viewport (button + gap + breathing room). */
 const CTA_SPACE = 60 + BOTTOM_GAP + 20;
@@ -94,12 +97,14 @@ export function FreezeSheet() {
   const [touched, setTouched] = useState({ price: false, link: false });
   const [suggestion, setSuggestion] = useState<ClipboardSuggestion | null>(null);
   const [suggestionUsed, setSuggestionUsed] = useState(false);
+  /** The clipboard was read (or took too long): the top slot may show the link field. */
+  const [clipboardChecked, setClipboardChecked] = useState(false);
   const [moment, setMoment] = useState<Moment | null>(null);
 
   const mounted = useRef(true);
   const submitting = useRef(false);
   const priceRef = useRef<TextInput>(null);
-  const linkRef = useRef<TextInput>(null);
+  const nameRef = useRef<TextInput>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -108,14 +113,20 @@ export function FreezeSheet() {
     };
   }, []);
 
-  // Clipboard suggestion: read once when the sheet opens (user intent, so the iOS paste banner is expected).
+  // Clipboard suggestion: read once when the sheet opens (user intent, so the iOS paste banner is
+  // expected). The top slot holds either the suggestion or the link field; it waits up to 250ms for
+  // the read (a browser may hold it behind a permission prompt) so it doesn't flash the wrong one.
   useEffect(() => {
     let alive = true;
+    const timer = setTimeout(() => setClipboardChecked(true), CLIPBOARD_WAIT_MS);
     readClipboardSuggestion().then((s) => {
-      if (alive && s) setSuggestion(s);
+      if (!alive) return;
+      if (s) setSuggestion(s);
+      setClipboardChecked(true);
     });
     return () => {
       alive = false;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -141,6 +152,7 @@ export function FreezeSheet() {
     !suggestionUsed &&
     normalizedLink !== suggestion.url &&
     !items.some((i) => i.url === suggestion.url);
+  const showLinkField = clipboardChecked && !showSuggestion;
 
   // --- keyboard-aware scrolling -------------------------------------------------
 
@@ -196,10 +208,11 @@ export function FreezeSheet() {
     else router.replace('/');
   };
 
+  /** Fills the link, plus the name and price where they are still empty (never overwrites typing). */
   const paste = () => {
     if (!suggestion) return;
-    if (suggestion.name) setName(suggestion.name.slice(0, NAME_MAX_LENGTH));
-    if (suggestion.priceCents) setPrice(centsToPriceInput(suggestion.priceCents));
+    if (suggestion.name && !name.trim()) setName(suggestion.name.slice(0, NAME_MAX_LENGTH));
+    if (suggestion.priceCents && !price.trim()) setPrice(centsToPriceInput(suggestion.priceCents));
     setLink(suggestion.url);
     setTouched({ price: true, link: true });
     setSuggestionUsed(true);
@@ -218,7 +231,6 @@ export function FreezeSheet() {
 
   const onLinkBlur = () => {
     setTouched((t) => ({ ...t, link: true }));
-    focused.current = null;
     // A link with no name yet: suggest one from the URL ('…/chunky-sneakers' → 'Chunky Sneakers').
     const url = normalizeUrl(link);
     if (url && !name.trim()) setName(guessNameFromUrl(url).slice(0, NAME_MAX_LENGTH));
@@ -279,17 +291,19 @@ export function FreezeSheet() {
               scrollEventThrottle: 32,
               keyboardDismissMode: Platform.OS === 'ios' ? 'interactive' : 'on-drag',
             }}
-            footerFade
             footer={
-              <Button
+              <View>
+                <CtaFade />
+                <Button
                 label={`Freeze it for ${cooldownPhrase(cooldown)}`}
                 icon="snowflake"
                 variant="ice"
                 disabled={!valid}
                 onPress={submit}
                 accessibilityHint={valid ? undefined : 'Add a name and a price first'}
-                testID="freeze-submit"
-              />
+                  testID="freeze-submit"
+                />
+              </View>
             }
             testID="freeze-sheet"
           >
@@ -305,12 +319,35 @@ export function FreezeSheet() {
               <IconButton icon="close" variant="glass" accessibilityLabel="Close" onPress={close} />
             </View>
 
+            {/* Top slot: the clipboard suggestion, which folds into the (filled) link field on Paste. */}
             <Collapsible open={showSuggestion}>
               {suggestion ? (
-                <View style={styles.clipboard}>
+                <View style={styles.slot}>
                   <ClipboardCard suggestion={suggestion} currency={currency} onPaste={paste} />
                 </View>
               ) : null}
+            </Collapsible>
+            <Collapsible open={showLinkField}>
+              <View style={styles.slot}>
+                <TextField
+                  label="Link (optional)"
+                  icon="link"
+                  placeholder="Paste a product link"
+                  value={link}
+                  onChangeText={setLink}
+                  keyboardType="url"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => (name.trim() ? priceRef : nameRef).current?.focus()}
+                  onBlur={onLinkBlur}
+                  hint={linkHint ?? undefined}
+                  error={linkHint != null}
+                  testID="freeze-link"
+                />
+              </View>
             </Collapsible>
 
             <View style={styles.details} onLayout={(e) => trackBox('details', e)}>
@@ -324,6 +361,7 @@ export function FreezeSheet() {
               />
               <View style={styles.fields}>
                 <TextField
+                  ref={nameRef}
                   label="What is it?"
                   placeholder="Chunky sneakers"
                   value={name}
@@ -345,9 +383,7 @@ export function FreezeSheet() {
                   onChangeText={(t) => setPrice(sanitizePriceInput(t))}
                   keyboardType="decimal-pad"
                   inputMode="decimal"
-                  returnKeyType="next"
-                  submitBehavior="submit"
-                  onSubmitEditing={() => linkRef.current?.focus()}
+                  returnKeyType="done"
                   onFocus={() => focusField('details')}
                   onBlur={() => {
                     setTouched((t) => ({ ...t, price: true }));
@@ -360,28 +396,7 @@ export function FreezeSheet() {
               </View>
             </View>
 
-            <View style={styles.link} onLayout={(e) => trackBox('link', e)}>
-              <TextField
-                ref={linkRef}
-                label="Link (optional)"
-                icon="link"
-                placeholder="Paste the product link"
-                value={link}
-                onChangeText={setLink}
-                keyboardType="url"
-                inputMode="url"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="done"
-                onFocus={() => focusField('link')}
-                onBlur={onLinkBlur}
-                hint={linkHint ?? undefined}
-                error={linkHint != null}
-                testID="freeze-link"
-              />
-            </View>
-
-            <View style={styles.section}>
+            <View style={[styles.section, styles.sectionFirst]}>
               <FieldCaption label="Why do you want it?" />
               <MoodChips value={mood} onChange={setMood} />
             </View>
@@ -418,10 +433,11 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingTop: 32 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  headerText: { flex: 1, gap: 2 },
-  clipboard: { paddingTop: 16 },
-  details: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 18 },
-  fields: { flex: 1, gap: 18 },
-  link: { marginTop: 18 },
-  section: { marginTop: 22, gap: 12 },
+  headerText: { flex: 1 },
+  slot: { paddingTop: 14 },
+  details: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 17 },
+  fields: { flex: 1, gap: 14 },
+  section: { marginTop: 16, gap: 9 },
+  sectionFirst: { marginTop: 17 },
+  footer: { borderRadius: 999 },
 });

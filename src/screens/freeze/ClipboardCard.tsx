@@ -25,17 +25,17 @@ export function ClipboardCard({ suggestion, currency, onPaste }: ClipboardCardPr
   const price = suggestion.priceCents ? formatMoney(suggestion.priceCents, currency) : null;
   return (
     <View style={styles.card} testID="clipboard-card">
-      <Icon name="link" size={24} color={colors.ice800} strokeWidth={2.2} />
+      <Icon name="link" size={22} color={colors.ice800} strokeWidth={2.2} />
       <View style={styles.text}>
-        <AppText variant="labelL" numberOfLines={1}>
+        <AppText variant="labelM" numberOfLines={1}>
           Paste from clipboard?
         </AppText>
         <View style={styles.urlRow}>
-          <AppText variant="bodyM" color={colors.ice800} numberOfLines={1} style={styles.url}>
+          <AppText variant="bodyS" color={colors.ice800} numberOfLines={1} style={styles.url}>
             {displayUrl(suggestion.url)}
           </AppText>
           {price ? (
-            <AppText variant="bodyM" color={colors.ice800} numberOfLines={1}>
+            <AppText variant="bodyS" color={colors.ice800} numberOfLines={1} style={styles.price}>
               {` · ${price}`}
             </AppText>
           ) : null}
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     minHeight: 64,
     paddingLeft: 16,
     paddingRight: 14,
@@ -138,12 +138,13 @@ const styles = StyleSheet.create({
     borderColor: colors.ice300,
     backgroundColor: colors.ice100,
   },
-  text: { flex: 1, minWidth: 0 },
+  text: { flex: 1, minWidth: 0, gap: 3 },
   urlRow: { flexDirection: 'row', alignItems: 'baseline' },
   url: { flexShrink: 1 },
+  price: { flexShrink: 0 },
   mini: {
     height: 32,
-    paddingHorizontal: 16,
+    paddingHorizontal: 13,
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
