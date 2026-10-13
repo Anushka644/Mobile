@@ -76,8 +76,19 @@ describe('Freezer home', () => {
     expect(screen.getByText('Nothing on ice yet')).toBeTruthy();
     expect(screen.getByText('Your freezer is empty')).toBeTruthy();
     expect(screen.queryByText('Cooling')).toBeNull();
+    expect(screen.getByTestId('freezer-empty-tip')).toBeTruthy();
     await fireEvent.press(screen.getByText('Freeze something'));
     expect(router.getPathname()).toBe('/freeze');
+  });
+
+  it('keeps the empty state but drops the first-run tip once there is history', async () => {
+    store().seedDemo();
+    for (const item of store().items.filter((i) => !i.decision)) store().decide(item.id, 'let-go');
+    await open();
+    expect(screen.getByText('Nothing on ice right now')).toBeTruthy();
+    expect(screen.getByText('Your freezer is empty')).toBeTruthy();
+    expect(screen.getByText(/ saved$/)).toBeTruthy();
+    expect(screen.queryByTestId('freezer-empty-tip')).toBeNull();
   });
 
   it('lets a thawed card linger in the grid, then moves it to Ready', async () => {

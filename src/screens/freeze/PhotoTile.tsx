@@ -15,12 +15,12 @@ import {
   Icon,
   PressableScale,
   productImageFor,
-  springCalm,
-  springPop,
   useReducedMotion,
 } from '@/components';
 import { colors, radius, shadow } from '@/theme/tokens';
 import type { Category } from '@/types';
+
+import { calm, pop } from './motion';
 
 /** Tile size (the Figma frame: 108, so the tile lines up with the name + price column). */
 export const PHOTO_TILE_SIZE = 108;
@@ -45,7 +45,7 @@ export function PhotoTile({ name, category, photoUri, onPick, onRemove, busy = f
 
   useEffect(() => {
     const to = showCube ? 1 : 0;
-    shown.set(reduced ? withTiming(to, { duration: 220 }) : withSpring(to, showCube ? springPop : springCalm));
+    shown.set(reduced ? withTiming(to, { duration: 220 }) : withSpring(to, showCube ? pop : calm));
   }, [showCube, reduced, shown]);
 
   const cubeStyle = useAnimatedStyle(() => {

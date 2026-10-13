@@ -38,3 +38,22 @@ export function freezerSubtitle(coolingCount: number, readyCount: number, hasHis
   if (readyCount > 0) parts.push(`${readyCount} ready to decide`);
   return parts.join(' · ');
 }
+
+/** Empty-state cube box on the 852pt design frame: the Figma body is 162 wide (150 × 216/200). */
+const EMPTY_CUBE = 216;
+/** Smallest empty-state cube, for 667pt phones (iPhone SE), so the CTA still clears the tab bar. */
+const EMPTY_CUBE_MIN = 150;
+const DESIGN_HEIGHT = 852;
+
+/**
+ * Empty-state vertical rhythm for a window height: the Figma values on the 852pt frame (cube 216,
+ * 27pt offset below centre, 46pt above the tip), tightened on shorter phones so the block fits.
+ */
+export function emptyLayout(windowHeight: number): { cube: number; top: number; tipGap: number } {
+  const short = Math.max(0, DESIGN_HEIGHT - windowHeight);
+  return {
+    cube: Math.round(Math.max(EMPTY_CUBE_MIN, EMPTY_CUBE - short * 0.6)),
+    top: Math.round(Math.max(0, 27 - short * 0.3)),
+    tipGap: Math.round(Math.max(24, 46 - short * 0.25)),
+  };
+}

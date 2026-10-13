@@ -13,16 +13,22 @@ export interface ItemNavBarProps {
 
 const BUTTON = 48;
 
-/** Item nav row (spec §4.4): Glass back · centred label · Glass arrow-up-right (optional). */
+/**
+ * Item nav row (spec §4.4): back · centred label · arrow-up-right (optional).
+ * The spec names the Glass style, but Figma renders it as opaque white with the soft shadow (see
+ * 02-item-cooling@2x.png: the circles are pure white over the lavender glow), which is the kit's
+ * Surface style; the kit's Glass is 55% white and reads grey-lavender here. The nav scrolls with
+ * the content, so there is nothing behind it to blur anyway.
+ */
 export function ItemNavBar({ title, onBack, onOpen }: ItemNavBarProps) {
   return (
     <View style={styles.row}>
-      <IconButton icon="chevron-left" variant="glass" accessibilityLabel="Back" onPress={onBack} />
+      <IconButton icon="chevron-left" variant="surface" accessibilityLabel="Back" onPress={onBack} />
       <AppText variant="labelS" color={colors.text.ice} align="center" numberOfLines={1} style={styles.title}>
         {title}
       </AppText>
       {onOpen ? (
-        <IconButton icon="arrow-up-right" variant="glass" accessibilityLabel="Open the product page" onPress={onOpen} />
+        <IconButton icon="arrow-up-right" variant="surface" accessibilityLabel="Open the product page" onPress={onOpen} />
       ) : (
         <View style={styles.placeholder} />
       )}

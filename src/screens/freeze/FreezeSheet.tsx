@@ -1,10 +1,12 @@
 // Freeze sheet (spec §4.3, design/exports/11-freeze-sheet@2x.png + 12-frozen-solid@2x.png).
 //
-// Header → clipboard suggestion → photo tile beside name + price → link → mood chips →
-// auto-guessed category chips → cooldown, with a sticky Ice "Freeze it for {cooldown}" CTA 24pt
-// above the bottom edge. On submit: the item is frozen, the freezing moment plays (~1.6s), then
-// the thaw reminder is set up (permission on the first own freeze) and the sheet is replaced by
-// /item/[id]. The CTA and the scroll area ride above the software keyboard.
+// Header → top slot (the clipboard suggestion card, or the link field: Paste folds the card into
+// the filled field) → photo tile beside name + price → mood chips → auto-guessed category chips →
+// cooldown, with a sticky Ice "Freeze it for {cooldown}" CTA 24pt above the bottom edge. Spacing
+// follows the Figma frame, so on an 852pt screen the whole form fits above the CTA.
+// On submit: the item is frozen, the freezing moment plays (~1.6s), then the thaw reminder is set
+// up (permission on the first own freeze) and the sheet is replaced by /item/[id].
+// The CTA and the scroll area ride above the software keyboard.
 
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -25,7 +27,6 @@ import {
 import {
   AppText,
   BOTTOM_GAP,
-  Button,
   CooldownPicker,
   cooldownPhrase,
   IconButton,
@@ -61,16 +62,20 @@ import { PhotoTile } from './PhotoTile';
 import { pickPhoto } from './pickPhoto';
 import { scheduleReminder, willNudge } from './scheduleReminder';
 import { SheetChrome } from './SheetChrome';
+import { StickyCta } from './StickyCta';
 import { useKeyboardOverlap } from './useKeyboardOverlap';
 
 /** Blocks holding text inputs that may need scrolling into view above the keyboard. */
 type FieldKey = 'details';
 
-/** How long the top slot waits for the clipboard before showing the link field. */
-const CLIPBOARD_WAIT_MS = 250;
+/** Space between the end of the form and the sticky CTA when scrolled to the bottom. */
+const CTA_CLEARANCE = 16;
 
 /** Space the sticky CTA takes at the bottom of the scroll viewport (button + gap + breathing room). */
 const CTA_SPACE = 60 + BOTTOM_GAP + 20;
+
+/** Hidden content (pt) below the fold before the CTA fade switches on. */
+const MORE_BELOW_SLACK = 2;
 
 interface Moment {
   item: Item;
@@ -97,8 +102,6 @@ export function FreezeSheet() {
   const [touched, setTouched] = useState({ price: false, link: false });
   const [suggestion, setSuggestion] = useState<ClipboardSuggestion | null>(null);
   const [suggestionUsed, setSuggestionUsed] = useState(false);
-  /** The clipboard was read (or took too long): the top slot may show the link field. */
-  const [clipboardChecked, setClipboardChecked] = useState(false);
   const [moment, setMoment] = useState<Moment | null>(null);
 
   const mounted = useRef(true);
@@ -113,20 +116,16 @@ export function FreezeSheet() {
     };
   }, []);
 
-  // Clipboard suggestion: read once when the sheet opens (user intent, so the iOS paste banner is
-  // expected). The top slot holds either the suggestion or the link field; it waits up to 250ms for
-  // the read (a browser may hold it behind a permission prompt) so it doesn't flash the wrong one.
+  // Clipboard suggestion: read once when the sheet opens (user intent, so the iOS paste prompt is
+  // expected). The top slot shows the link field right away and swaps it for the suggestion card if
+  // one arrives (the read can wait on a permission prompt) while the field is still empty.
   useEffect(() => {
     let alive = true;
-    const timer = setTimeout(() => setClipboardChecked(true), CLIPBOARD_WAIT_MS);
     readClipboardSuggestion().then((s) => {
-      if (!alive) return;
-      if (s) setSuggestion(s);
-      setClipboardChecked(true);
+      if (alive && s) setSuggestion(s);
     });
     return () => {
       alive = false;
-      clearTimeout(timer);
     };
   }, []);
 
@@ -147,12 +146,9 @@ export function FreezeSheet() {
   const priceHint = touched.price ? priceError(price) : null;
   const linkHint = touched.link ? linkError(link) : null;
   const normalizedLink = normalizeUrl(link);
+  // The suggestion never hides a link you typed, and isn't offered for something already frozen.
   const showSuggestion =
-    suggestion != null &&
-    !suggestionUsed &&
-    normalizedLink !== suggestion.url &&
-    !items.some((i) => i.url === suggestion.url);
-  const showLinkField = clipboardChecked && !showSuggestion;
+    suggestion != null && !suggestionUsed && !link.trim() && !items.some((i) => i.url === suggestion.url);
 
   // --- keyboard-aware scrolling -------------------------------------------------
 
@@ -195,8 +191,21 @@ export function FreezeSheet() {
     focused.current = key;
     if (keyboardRef.current > 0 || Platform.OS === 'web') reveal(key);
   };
+  // --- CTA fade: only while part of the form is hidden below the fold ---------------
+
+  const [moreBelow, setMoreBelow] = useState(false);
+  const contentHeight = useRef(0);
+  const viewportHeight = useRef(0);
+  const updateMoreBelow = useCallback(() => {
+    if (viewportHeight.current === 0) return;
+    setMoreBelow(contentHeight.current - scrollY.current - viewportHeight.current > MORE_BELOW_SLACK);
+  }, []);
+
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollY.current = e.nativeEvent.contentOffset.y;
+    contentHeight.current = e.nativeEvent.contentSize.height;
+    viewportHeight.current = e.nativeEvent.layoutMeasurement.height;
+    updateMoreBelow();
   };
 
   // --- actions -------------------------------------------------------------------
@@ -288,22 +297,29 @@ export function FreezeSheet() {
             contentStyle={styles.content}
             scrollProps={{
               onScroll,
+              onLayout: (e) => {
+                viewportHeight.current = e.nativeEvent.layout.height;
+                updateMoreBelow();
+              },
+              onContentSizeChange: (_w, h) => {
+                contentHeight.current = h;
+                updateMoreBelow();
+              },
               scrollEventThrottle: 32,
               keyboardDismissMode: Platform.OS === 'ios' ? 'interactive' : 'on-drag',
             }}
+            bottomPadding={CTA_CLEARANCE}
             footer={
-              <View>
-                <CtaFade />
-                <Button
+              <StickyCta
+                fade={moreBelow}
                 label={`Freeze it for ${cooldownPhrase(cooldown)}`}
                 icon="snowflake"
                 variant="ice"
                 disabled={!valid}
                 onPress={submit}
                 accessibilityHint={valid ? undefined : 'Add a name and a price first'}
-                  testID="freeze-submit"
-                />
-              </View>
+                testID="freeze-submit"
+              />
             }
             testID="freeze-sheet"
           >
@@ -327,7 +343,7 @@ export function FreezeSheet() {
                 </View>
               ) : null}
             </Collapsible>
-            <Collapsible open={showLinkField}>
+            <Collapsible open={!showSuggestion}>
               <View style={styles.slot}>
                 <TextField
                   label="Link (optional)"
@@ -396,8 +412,8 @@ export function FreezeSheet() {
               </View>
             </View>
 
-            <View style={[styles.section, styles.sectionFirst]}>
-              <FieldCaption label="Why do you want it?" />
+            <View style={[styles.section, styles.moodSection]}>
+              <FieldCaption label="Why do you want it?" style={styles.plainCaption} />
               <MoodChips value={mood} onChange={setMood} />
             </View>
 
@@ -437,7 +453,9 @@ const styles = StyleSheet.create({
   slot: { paddingTop: 14 },
   details: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 17 },
   fields: { flex: 1, gap: 14 },
-  section: { marginTop: 16, gap: 9 },
-  sectionFirst: { marginTop: 17 },
-  footer: { borderRadius: 999 },
+  // Section rhythm from 11-freeze-sheet: 13 between sections, 9 under a caption row (20 high with
+  // its accessory); the mood caption has none, so its row is the text height with a 10 gap.
+  section: { marginTop: 13, gap: 9 },
+  moodSection: { marginTop: 17, gap: 10 },
+  plainCaption: { minHeight: 14 },
 });

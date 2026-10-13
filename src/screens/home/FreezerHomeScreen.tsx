@@ -17,7 +17,6 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeOut,
-  FadeOutUp,
   LayoutAnimationConfig,
   LinearTransition,
 } from 'react-native-reanimated';
@@ -45,15 +44,23 @@ import { useThawArrivals } from './useThawArrivals';
 
 // Layout motion: a calm spring for things that slide to make room, a livelier one for arrivals.
 const MOVE = LinearTransition.springify().damping(20).stiffness(190);
-// Containers whose height changes (the sections) get MOVE on iOS/Android only: on web Reanimated
-// animates layout with a FLIP scale transform, which would squash their contents. On web the
-// fixed-size leaves (headers, banners, cards) carry MOVE instead and glide on their own.
-const SECTION_MOVE = Platform.OS === 'web' ? undefined : MOVE;
-const CARD_EXIT = FadeOutUp.duration(200);
+// Thaw-arrival choreography, in three beats so nothing crosses over anything else:
+//   1. the Ready card dissolves out of the grid (CARD_EXIT, quick, before the reflow builds speed),
+//   2. the Cooling header and grid glide down / reflow (MOVE),
+//   3. the Ready header and the new banner land in the space that opened up (SECTION_ENTER, BANNER_ENTER).
+// (A delayed layout transition would stage 1 and 2 more cleanly, but on web Reanimated jumps the
+// element to its new spot for the length of the delay.)
+const CARD_EXIT = FadeOut.duration(120);
 const CARD_ENTER = FadeInDown.springify().damping(14).stiffness(170);
-const BANNER_ENTER = FadeInDown.springify().damping(13).stiffness(170).delay(80);
-const SECTION_ENTER = FadeIn.duration(220);
-const SECTION_EXIT = FadeOut.duration(180);
+const ARRIVE_DELAY = 240;
+const SECTION_ENTER = FadeIn.delay(ARRIVE_DELAY).duration(260);
+const BANNER_ENTER = FadeInDown.delay(ARRIVE_DELAY + 60).springify().damping(13).stiffness(170);
+const SECTION_EXIT = FadeOut.duration(160);
+const SAVED_ENTER = FadeIn.duration(220);
+// Containers whose height changes (the sections) animate their layout on iOS/Android only: on web
+// Reanimated animates layout with a FLIP scale transform, which would squash their contents. On
+// web the fixed-size leaves (headers, banners, cards) carry MOVE and glide on their own.
+const SECTION_MOVE = Platform.OS === 'web' ? undefined : MOVE;
 
 const byThawAt = (a: Item, b: Item) => a.thawAt - b.thawAt;
 
@@ -106,7 +113,7 @@ export function FreezerHomeScreen() {
         </View>
 
         {saved > 0 ? (
-          <Animated.View layout={MOVE} entering={SECTION_ENTER}>
+          <Animated.View layout={MOVE} entering={SAVED_ENTER}>
             {/* The kit banner pads 16 all round (88 tall); the Figma banner is 76 tall: 10 vertical. */}
             <SavedBanner savedCents={saved} letGoCount={letGoCount} currency={currency} style={styles.saved} />
           </Animated.View>
@@ -165,7 +172,7 @@ export function FreezerHomeScreen() {
           </Animated.View>
         ) : null}
 
-        {empty ? <EmptyFreezer onFreeze={() => router.push('/freeze')} /> : null}
+        {empty ? <EmptyFreezer onFreeze={() => router.push('/freeze')} showTip={items.length === 0} /> : null}
       </LayoutAnimationConfig>
     </Screen>
   );

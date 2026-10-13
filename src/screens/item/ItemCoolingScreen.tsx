@@ -146,7 +146,8 @@ function ItemCooling({ item }: { item: Item }) {
         visible={confirming}
         icon="hourglass"
         title="Thaw it now?"
-        message="Waiting is the whole trick — but it’s your call."
+        // Break after the dash: the message wraps as two balanced lines instead of orphaning "call."
+        message={'Waiting is the whole trick —\nbut it’s your call.'}
         primary={{ label: 'Keep it frozen', onPress: () => setConfirming(false) }}
         secondary={{ label: 'Thaw now', onPress: thawNow }}
         onDismiss={() => setConfirming(false)}

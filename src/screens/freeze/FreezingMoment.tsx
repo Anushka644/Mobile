@@ -37,12 +37,13 @@ import {
   Icon,
   productImageFor,
   ProductTile,
-  springPop,
   useReducedMotion,
 } from '@/components';
 import { haptics } from '@/lib/haptics';
 import { colors, withAlpha } from '@/theme/tokens';
 import type { Item } from '@/types';
+
+import { pop } from './motion';
 
 /** How long the moment plays before the sheet moves on to the item. */
 export const FREEZING_MOMENT_MS = 1600;
@@ -66,6 +67,8 @@ const PRODUCT = 92 * K;
 const PRODUCT_LEFT = CUBE_LEFT + 54 * K;
 const PRODUCT_TOP = CUBE_TOP + 55 * K;
 const DROP = 340;
+const CONTACT_W = 206;
+const CONTACT_H = 18;
 const RING_W = 299;
 const RING_H = 50;
 const TEXT_GAP = 80;
@@ -98,11 +101,14 @@ const DOTS = [
 ] as const;
 const BURST_ORIGIN = { x: DESIGN_FRAME_WIDTH / 2, y: BODY_TOP + BODY / 2 };
 
-/** Solid ice-blue four-point sparkles. */
+/**
+ * Outlined ice-blue four-point sparkles: the star's top-left corner and its icon size (hero
+ * coordinates). The glyph fills ~22 of the icon's 24 box, so the icon sits 1pt up-left.
+ */
 const SPARKLES = [
-  { x: 71, y: 101, size: 18 },
-  { x: 310, y: 130, size: 16 },
-  { x: 96, y: 309, size: 13 },
+  { x: 71, y: 101, size: 21 },
+  { x: 310, y: 130, size: 19 },
+  { x: 96, y: 309, size: 15 },
 ] as const;
 
 const BUBBLES = [
@@ -156,11 +162,11 @@ export function FreezingMoment({ item, cooldownLabel, thawLabel, nudge }: Freezi
           LAND,
           withSequence(
             withTiming(1, { duration: 90, easing: Easing.out(Easing.quad) }),
-            withSpring(0, springPop)
+            withSpring(0, pop)
           )
         )
       );
-      body.set(withDelay(LAND - 40, withSpring(1, springPop)));
+      body.set(withDelay(LAND - 40, withSpring(1, pop)));
       frost.set(withDelay(LAND, withTiming(1, { duration: 400, easing: Easing.out(Easing.quad) })));
       ring.set(withDelay(LAND, withTiming(1, { duration: 700, easing: out })));
       burst.set(withDelay(LAND, withTiming(1, { duration: 900, easing: out })));
@@ -229,8 +235,10 @@ export function FreezingMoment({ item, cooldownLabel, thawLabel, nudge }: Freezi
           <Animated.View style={[styles.abs, styles.puddle, baseStyle]}>
             <Puddle />
           </Animated.View>
+          {/* The slate shade where the ice meets the puddle: ice800, deepened with a little plum. */}
           <Animated.View style={[styles.abs, styles.contact, baseStyle]}>
-            <GlowEllipse color={colors.ice800} x={0} y={0} width={190} height={22} blur={16} opacity={0.45} />
+            <GlowEllipse color={colors.ice800} x={0} y={0} width={CONTACT_W} height={CONTACT_H} blur={14} opacity={0.62} />
+            <GlowEllipse color={colors.plum900} x={0} y={0} width={CONTACT_W} height={CONTACT_H} blur={14} opacity={0.2} />
           </Animated.View>
 
           {/* Body (behind the product) */}
@@ -311,8 +319,8 @@ export function FreezingMoment({ item, cooldownLabel, thawLabel, nudge }: Freezi
         </Rise>
         <Rise value={pill}>
           <View style={styles.pill}>
-            <Icon name="clock" size={18} color={colors.ice800} strokeWidth={2.4} />
-            <AppText variant="labelM" color={colors.ice800} tabular>
+            <Icon name="clock" size={16} color={colors.ice800} strokeWidth={2.4} />
+            <AppText variant="labelS" color={colors.ice800} tabular>
               {`Thaws ${thawLabel}`}
             </AppText>
           </View>
@@ -373,15 +381,15 @@ function SnowDot({
 function Sparkle({ x, y, size, delay, reduced }: { x: number; y: number; size: number; delay: number; reduced: boolean }) {
   const v = useSharedValue(0);
   useEffect(() => {
-    v.set(withDelay(delay, reduced ? withTiming(1, { duration: 260 }) : withSpring(1, springPop)));
+    v.set(withDelay(delay, reduced ? withTiming(1, { duration: 260 }) : withSpring(1, pop)));
   }, [v, delay, reduced]);
   const style = useAnimatedStyle(() => ({
     opacity: Math.min(1, v.get() * 2),
     transform: [{ scale: v.get() }, { rotate: `${(1 - v.get()) * -45}deg` }],
   }));
   return (
-    <Animated.View style={[styles.abs, { left: x - size / 2, top: y - size / 2 }, style]}>
-      <Icon name="sparkle" size={size} color={colors.ice600} fill={colors.ice600} strokeWidth={1.4} />
+    <Animated.View style={[styles.abs, { left: x - 1, top: y - 1 }, style]}>
+      <Icon name="sparkle" size={size} color={colors.ice600} strokeWidth={2.4} />
     </Animated.View>
   );
 }
@@ -420,7 +428,7 @@ const styles = StyleSheet.create({
   hero: { width: DESIGN_FRAME_WIDTH, height: HERO_H, transformOrigin: 'top' },
   abs: { position: 'absolute' },
   puddle: { left: (DESIGN_FRAME_WIDTH - 96 * K) / 2, top: GROUND - 8 * K },
-  contact: { left: (DESIGN_FRAME_WIDTH - 190) / 2, top: GROUND - 9, width: 190, height: 22 },
+  contact: { left: (DESIGN_FRAME_WIDTH - CONTACT_W) / 2, top: GROUND + 1 - CONTACT_H / 2, width: CONTACT_W, height: CONTACT_H },
   body: { left: BODY_LEFT, top: BODY_TOP, width: BODY, height: BODY, borderRadius: 40 * K, overflow: 'hidden' },
   bodyFill: { boxShadow: `0px ${16 * K}px ${32 * K}px ${-6 * K}px ${withAlpha(colors.ice400, 0.45)}` },
   rim: { borderWidth: 2 * K, borderColor: withAlpha(colors.white, 0.75) },
@@ -447,10 +455,10 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    height: 32,
-    paddingHorizontal: 14,
-    borderRadius: 16,
+    gap: 5,
+    height: 30,
+    paddingHorizontal: 12,
+    borderRadius: 15,
     backgroundColor: colors.ice100,
   },
 });

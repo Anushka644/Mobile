@@ -8,12 +8,13 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { AppText, Icon, PressableScale, springCalm, useReducedMotion } from '@/components';
+import { AppText, Icon, PressableScale, useReducedMotion } from '@/components';
 import type { ClipboardSuggestion } from '@/lib/clipboard';
 import { formatMoney } from '@/lib/money';
 import { colors, radius, shadow, withAlpha } from '@/theme/tokens';
 
 import { displayUrl } from './formLogic';
+import { calm } from './motion';
 
 export interface ClipboardCardProps {
   suggestion: ClipboardSuggestion;
@@ -35,8 +36,9 @@ export function ClipboardCard({ suggestion, currency, onPaste }: ClipboardCardPr
             {displayUrl(suggestion.url)}
           </AppText>
           {price ? (
+            // A margin, not a leading space: react-native-web drops a Text's leading whitespace.
             <AppText variant="bodyS" color={colors.ice800} numberOfLines={1} style={styles.price}>
-              {` · ${price}`}
+              {`· ${price}`}
             </AppText>
           ) : null}
         </View>
@@ -87,18 +89,20 @@ export interface CollapsibleProps {
 
 /**
  * Height + fade reveal for content that comes and goes above other content (no layout jump):
- * springs open to the content's measured height, folds to 0 and unmounts when closed.
+ * springs open to the content's measured height, folds to 0 and unmounts when closed. Content that
+ * is open on the first render is simply there (no reveal), so a sheet doesn't shift as it opens.
  */
 export function Collapsible({ open, children }: CollapsibleProps) {
   const reduced = useReducedMotion();
   const [mounted, setMounted] = useState(open);
   if (open && !mounted) setMounted(true);
-  const height = useSharedValue(0);
-  const progress = useSharedValue(0);
+  /** Natural content height; -1 until measured. */
+  const height = useSharedValue(-1);
+  const progress = useSharedValue(open ? 1 : 0);
 
   useEffect(() => {
     if (open) {
-      progress.set(reduced ? withTiming(1, { duration: 220 }) : withSpring(1, springCalm));
+      progress.set(reduced ? withTiming(1, { duration: 220 }) : withSpring(1, calm));
     } else {
       progress.set(
         withTiming(0, { duration: reduced ? 180 : 280, easing: Easing.inOut(Easing.cubic) }, (finished) => {
@@ -108,16 +112,23 @@ export function Collapsible({ open, children }: CollapsibleProps) {
     }
   }, [open, reduced, progress]);
 
-  const outer = useAnimatedStyle(() => ({ height: height.get() * progress.get() }));
+  const outer = useAnimatedStyle(() => {
+    const h = height.get();
+    const p = progress.get();
+    // Not measured yet: natural height when fully open (first render), else nothing.
+    if (h < 0) return p >= 1 ? {} : { height: 0 };
+    return { height: h * p };
+  });
   const inner = useAnimatedStyle(() => {
     const p = progress.get();
     return { opacity: Math.min(1, p * 1.4), transform: [{ translateY: (1 - p) * -10 }, { scale: 0.97 + 0.03 * p }] };
   });
 
   if (!mounted && !open) return null;
+  // The content stays in flow (flexShrink 0), so it keeps its natural height inside the clip.
   return (
     <Animated.View style={[styles.clip, outer, open ? null : styles.closed]}>
-      <Animated.View style={[styles.measure, inner]} onLayout={(e) => height.set(e.nativeEvent.layout.height)}>
+      <Animated.View style={[styles.content, inner]} onLayout={(e) => height.set(e.nativeEvent.layout.height)}>
         {children}
       </Animated.View>
     </Animated.View>
@@ -141,7 +152,7 @@ const styles = StyleSheet.create({
   text: { flex: 1, minWidth: 0, gap: 3 },
   urlRow: { flexDirection: 'row', alignItems: 'baseline' },
   url: { flexShrink: 1 },
-  price: { flexShrink: 0 },
+  price: { flexShrink: 0, marginLeft: 4 },
   mini: {
     height: 32,
     paddingHorizontal: 13,
@@ -155,5 +166,5 @@ const styles = StyleSheet.create({
   miniFill: { borderRadius: radius.full },
   clip: { overflow: 'hidden' },
   closed: { pointerEvents: 'none' },
-  measure: { position: 'absolute', left: 0, right: 0, top: 0 },
+  content: { flexShrink: 0 },
 });

@@ -1,7 +1,7 @@
 import { HOUR_MS } from '@/lib/melt';
 import type { Item } from '@/types';
 
-import { anyThawingWithinHour, freezerSubtitle, gridCardWidth } from '../homeLayout';
+import { anyThawingWithinHour, emptyLayout, freezerSubtitle, gridCardWidth } from '../homeLayout';
 import { newlyThawedIds } from '../useThawArrivals';
 
 const item = (id: string, thawAt: number, extra: Partial<Item> = {}): Item => ({
@@ -76,5 +76,20 @@ describe('anyThawingWithinHour', () => {
     expect(anyThawingWithinHour([item('a', now + HOUR_MS + 1)], now)).toBe(false);
     expect(anyThawingWithinHour([item('a', now - 1)], now)).toBe(false);
     expect(anyThawingWithinHour([item('a', now + 10, { decision: 'bought' })], now)).toBe(false);
+  });
+});
+
+describe('emptyLayout', () => {
+  it('uses the Figma rhythm on the 852pt frame and taller', () => {
+    expect(emptyLayout(852)).toEqual({ cube: 216, top: 27, tipGap: 46 });
+    expect(emptyLayout(932)).toEqual({ cube: 216, top: 27, tipGap: 46 });
+  });
+
+  it('tightens on shorter phones, down to the iPhone SE floor', () => {
+    const mini = emptyLayout(812);
+    expect(mini.cube).toBeLessThan(216);
+    expect(mini.cube).toBeGreaterThan(150);
+    expect(emptyLayout(667)).toEqual({ cube: 150, top: 0, tipGap: 24 });
+    expect(emptyLayout(500)).toEqual({ cube: 150, top: 0, tipGap: 24 });
   });
 });
