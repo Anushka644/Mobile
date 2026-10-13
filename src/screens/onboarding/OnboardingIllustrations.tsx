@@ -242,6 +242,9 @@ const SPARKLES = [
   { cx: 252.5, cy: 72, size: 17, delay: 900 },
 ] as const;
 
+/** The Figma jar's "Level Mid": four of the six coin rows (10-onboarding-3). */
+const JAR_LEVEL = 4 / 6;
+
 /** Slide 3: a Jar at level "Mid" whose coins drop in when the slide is reached, plus hovering coins. */
 export const JarHero = memo(function JarHero({ scale, active }: IllustrationProps) {
   const box = ILLUSTRATION_BOX.grow;
@@ -249,7 +252,7 @@ export const JarHero = memo(function JarHero({ scale, active }: IllustrationProp
   return (
     <View style={{ width: box.width * scale, height: box.height * scale }}>
       <Jar
-        level={active ? 0.5 : 0}
+        level={active ? JAR_LEVEL : 0}
         width={jarWidth}
         style={[styles.abs, { left: ((box.width - JAR_WIDTH) / 2) * scale, top: JAR_TOP * scale }]}
       />

@@ -125,7 +125,9 @@ export function OnboardingScreen() {
   useAnimatedReaction(
     () => Math.min(LAST_SLIDE, Math.max(0, Math.round(position.get()))),
     (cur, prev) => {
-      if (cur !== prev) scheduleOnRN(onIndex, cur);
+      // Skip the first run (prev null): the state already starts on slide 1, and a late echo of it
+      // must not rewind a page the user has already asked for.
+      if (prev !== null && cur !== prev) scheduleOnRN(onIndex, cur);
     }
   );
 

@@ -24,7 +24,7 @@ import { setThawReminders } from './reminders';
 import { SettingsCard, SettingsRow } from './SettingsCard';
 import { Toast, useToast } from './Toast';
 import { CooldownSheet, CurrencySheet, GoalSheet, WhyWaitingSheet } from './YouSheets';
-import { currencyLabel, fastForwardMessage, offsetLabel } from './youModel';
+import { currencyLabel, fastForwardMessage, goalRowValue, offsetLabel } from './youModel';
 
 type SheetName = 'cooldown' | 'currency' | 'goal' | 'why';
 
@@ -57,7 +57,7 @@ export function YouScreen() {
       haptics.success();
       show({ text: 'We’ll nudge you when things thaw', icon: 'bell' });
     } else if (result === 'web') {
-      show({ text: 'Saved. Reminders ring in the iOS and Android app', icon: 'bell' });
+      show({ text: 'Reminders ring in the phone app', icon: 'bell' });
     } else if (result === 'denied') {
       show({
         text: 'Notifications are off for Chill',
@@ -148,7 +148,8 @@ export function YouScreen() {
               tint={colors.coral100}
               ink={colors.coral500}
               label="Savings goal"
-              value={settings.goal?.name ?? 'Add one'}
+              value={settings.goal ? goalRowValue(settings.goal.name) : 'Add one'}
+              accessibilityValue={settings.goal?.name}
               valueMuted={!settings.goal}
               onPress={() => setSheet('goal')}
               testID="you-goal"

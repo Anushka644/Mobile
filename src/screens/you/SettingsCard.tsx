@@ -47,10 +47,10 @@ export interface SettingsRowProps {
   value?: string;
   /** Show the value in plum300 (a placeholder such as "Add one"). */
   valueMuted?: boolean;
+  /** What screen readers say for the value when the shown one is shortened (e.g. the full goal name). */
+  accessibilityValue?: string;
   /** A trailing control (e.g. a Toggle) instead of the value + chevron. */
   accessory?: ReactNode;
-  /** A small Body/S line under the label. */
-  hint?: string;
   onPress?: () => void;
   onLongPress?: () => void;
   accessibilityHint?: string;
@@ -69,8 +69,8 @@ export function SettingsRow({
   labelColor = colors.text.primary,
   value,
   valueMuted,
+  accessibilityValue,
   accessory,
-  hint,
   onPress,
   onLongPress,
   accessibilityHint,
@@ -81,34 +81,30 @@ export function SettingsRow({
   const content = (
     <>
       <IconBadge icon={icon} tint={tint} color={ink} size={BADGE} iconSize={20} shape="rounded" />
-      <View style={styles.labelCol}>
-        <AppText variant="labelL" color={labelColor} numberOfLines={1}>
-          {label}
-        </AppText>
-        {hint ? (
-          <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={2}>
-            {hint}
-          </AppText>
-        ) : null}
+      <AppText variant="labelL" color={labelColor} numberOfLines={1} style={styles.label}>
+        {label}
+      </AppText>
+      <View style={styles.trailing}>
+        {accessory ?? (
+          <>
+            {value ? (
+              <AppText
+                variant="bodyL"
+                color={valueMuted ? colors.text.tertiary : colors.text.secondary}
+                numberOfLines={1}
+                style={styles.value}
+              >
+                {value}
+              </AppText>
+            ) : null}
+            <Icon name="chevron-right" size={20} color={colors.text.tertiary} strokeWidth={2.2} />
+          </>
+        )}
       </View>
-      {accessory ?? (
-        <View style={styles.trailing}>
-          {value ? (
-            <AppText
-              variant="bodyL"
-              color={valueMuted ? colors.text.tertiary : colors.text.secondary}
-              numberOfLines={1}
-              style={styles.value}
-            >
-              {value}
-            </AppText>
-          ) : null}
-          <Icon name="chevron-right" size={20} color={colors.text.tertiary} strokeWidth={2.2} />
-        </View>
-      )}
     </>
   );
 
+  const spokenValue = accessibilityValue ?? value;
   if (!onPress && !onLongPress) {
     return (
       <View style={styles.row} testID={testID}>
@@ -124,7 +120,7 @@ export function SettingsRow({
       scaleTo={0.98}
       pressedStyle={styles.pressed}
       accessibilityRole={accessibilityRole}
-      accessibilityLabel={value ? `${label}, ${value}` : label}
+      accessibilityLabel={spokenValue ? `${label}, ${spokenValue}` : label}
       accessibilityHint={accessibilityHint}
       accessibilityState={accessibilityState}
       style={styles.row}
@@ -156,7 +152,17 @@ const styles = StyleSheet.create({
     gap: BADGE_GAP,
   },
   pressed: { backgroundColor: colors.bg.elevated },
-  labelCol: { flex: 1, gap: 1 },
-  trailing: { flexDirection: 'row', alignItems: 'center', gap: 10, maxWidth: '55%' },
+  // Labels are short and fixed, so they keep their width (up to 72% at large text sizes) and a long
+  // value (a goal name) ellipsizes instead; the trailing group fills the rest, right-aligned.
+  label: { flexShrink: 0, maxWidth: '72%' },
+  trailing: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
   value: { flexShrink: 1 },
 });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
-import { AppText, Icon, springPop, TAB_BAR_HEIGHT, useBottomGap, useReducedMotion, type IconName } from '@/components';
+import { AppText, Icon, springPop, useReducedMotion, useTopInset, type IconName } from '@/components';
 import { colors, radius, shadow } from '@/theme/tokens';
 
 export interface ToastMessage {
@@ -53,11 +53,12 @@ export interface ToastProps {
 }
 
 /**
- * A plum pill that springs up just above the floating tab bar (24 + 76 + 12 from the bottom) to
- * confirm demo actions ("Sample freezer loaded"). Fades out on its own.
+ * A plum pill that drops in under the status bar to confirm demo actions ("Sample freezer loaded")
+ * and fades out on its own. It lives at the top because the tab bar's 170pt cream fade would wash
+ * out anything floating just above the bar.
  */
 export function Toast({ toast, onHide }: ToastProps) {
-  const gap = useBottomGap();
+  const top = useTopInset();
   const reduced = useReducedMotion();
   const shown = useSharedValue(0);
   const [last, setLast] = useState(toast);
@@ -75,13 +76,13 @@ export function Toast({ toast, onHide }: ToastProps) {
 
   const style = useAnimatedStyle(() => {
     const v = shown.get();
-    return { opacity: Math.min(1, v * 1.5), transform: [{ translateY: (1 - v) * 18 }, { scale: 0.94 + 0.06 * v }] };
+    return { opacity: Math.min(1, v * 1.5), transform: [{ translateY: (1 - v) * -18 }, { scale: 0.94 + 0.06 * v }] };
   });
 
   const message = toast ?? last;
   if (!message) return null;
   return (
-    <View style={[styles.wrap, { bottom: gap + TAB_BAR_HEIGHT + 12 }]}>
+    <View style={[styles.wrap, { top: top + 6 }]}>
       <Animated.View
         style={[styles.toast, toast ? null : styles.noTouch, style]}
         accessibilityLiveRegion="polite"

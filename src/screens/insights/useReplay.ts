@@ -27,28 +27,25 @@ const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
  */
 export function useTween(play: number, duration = 900, delay = 0): number {
   const reduced = useReducedMotion();
-  // Starts at 0 and waits for the first focus (play 1), so nothing flashes at its final value.
-  const [t, setT] = useState(reduced ? 1 : 0);
+  // `t` belongs to one replay: a new `play` starts it again from 0 (reset during render, so the
+  // final value never flashes before the sweep).
+  const [tween, setTween] = useState({ play, t: 0 });
+  if (tween.play !== play) setTween({ play, t: 0 });
 
   useEffect(() => {
-    if (reduced) {
-      setT(1);
-      return;
-    }
-    if (play === 0) return;
-    setT(0);
+    if (reduced || play === 0) return;
     let frame = 0;
     let start: number | null = null;
     const tick = (ts: number) => {
       if (start === null) start = ts;
       const elapsed = ts - start - delay;
       const v = elapsed <= 0 ? 0 : Math.min(1, elapsed / duration);
-      setT(easeOutCubic(v));
+      setTween({ play, t: easeOutCubic(v) });
       if (v < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [play, duration, delay, reduced]);
 
-  return t;
+  return reduced ? 1 : tween.play === play ? tween.t : 0;
 }

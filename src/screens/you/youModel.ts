@@ -45,10 +45,27 @@ export function offsetLabel(offsetMs: number): string {
   return hours >= 24 ? `+${Math.floor(days)}d ${hours % 24}h` : `+${hours}h`;
 }
 
-/** Toast after a fast-forward, e.g. "Jumped ahead a day · 2 wants thawed". */
+/** Toast after a fast-forward (one line on a phone): "Jumped ahead a day", "+1 day · 2 wants thawed". */
 export function fastForwardMessage(newlyThawed: number): string {
   if (newlyThawed <= 0) return 'Jumped ahead a day';
-  return `Jumped ahead a day · ${newlyThawed} ${newlyThawed === 1 ? 'want' : 'wants'} thawed`;
+  return `+1 day · ${newlyThawed} ${newlyThawed === 1 ? 'want' : 'wants'} thawed`;
+}
+
+/** Goal names up to this length show in full in the Savings goal row. */
+const GOAL_ROW_MAX = 12;
+
+/**
+ * The Savings goal row's value: short names as typed, long ones trimmed to their destination the
+ * way the Figma row does ("Weekend in Lisbon" → "Lisbon", "Trip to Japan" → "Japan",
+ * "Saving for a new bike" → "New bike"). Anything else is shown as-is and ellipsized by the row.
+ */
+export function goalRowValue(name: string): string {
+  const full = name.trim().replace(/\s+/g, ' ');
+  if (full.length <= GOAL_ROW_MAX) return full;
+  const match = /\b(?:in|to|for)\s+(?:(?:a|an|the|my)\s+)?(\S.*)$/i.exec(full);
+  const tail = match?.[1]?.trim();
+  if (!tail || tail.length >= full.length) return full;
+  return tail.charAt(0).toUpperCase() + tail.slice(1);
 }
 
 /** Longest goal name accepted by the goal sheet. */
