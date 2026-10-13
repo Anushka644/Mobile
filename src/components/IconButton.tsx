@@ -6,14 +6,14 @@ import { colors, shadow, withAlpha } from '@/theme/tokens';
 import { Icon, type IconName } from './Icon';
 import { PressableScale, type HapticKind } from './PressableScale';
 
-export type IconButtonVariant = 'surface' | 'glass' | 'inverse';
+export type IconButtonVariant = 'surface' | 'glass' | 'inverse' | 'night';
 
 export interface IconButtonProps {
   icon: IconName;
   /** Required for screen readers (there is no visible label). */
   accessibilityLabel: string;
   onPress?: () => void;
-  /** surface = white + soft shadow, glass = frosted white 55%, inverse = plum with white icon. Default 'surface'. */
+  /** surface = white + hairline, glass = frosted white, inverse = ink with white icon, night = dark glass with a white icon (for night screens). Default 'surface'. */
   variant?: IconButtonVariant;
   /** Circle diameter. Default 44 (icon 20). */
   size?: number;
@@ -42,13 +42,15 @@ export function IconButton({
   style,
   testID,
 }: IconButtonProps) {
-  const fg = color ?? (variant === 'inverse' ? colors.text.inverse : colors.text.primary);
+  const fg = color ?? (variant === 'inverse' || variant === 'night' ? colors.text.inverse : colors.text.primary);
   const bg =
     variant === 'inverse'
       ? colors.action.primary
-      : variant === 'glass'
-        ? withAlpha(colors.white, CAN_BLUR ? 0.55 : 0.82)
-        : colors.bg.surface;
+      : variant === 'night'
+        ? withAlpha(colors.white, 0.08)
+        : variant === 'glass'
+          ? withAlpha(colors.white, CAN_BLUR ? 0.55 : 0.82)
+          : colors.bg.surface;
 
   return (
     <PressableScale
@@ -61,7 +63,7 @@ export function IconButton({
       style={[
         styles.base,
         { width: size, height: size, borderRadius: size / 2 },
-        variant === 'inverse' ? shadow('button') : shadow('soft'),
+        variant === 'inverse' ? shadow('button') : variant === 'night' ? styles.nightRim : shadow('soft'),
         disabled ? styles.disabled : null,
         style,
       ]}
@@ -83,4 +85,5 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.4 },
   noTouch: { pointerEvents: 'none' },
+  nightRim: { boxShadow: `inset 0px 0px 0px 1px ${withAlpha(colors.white, 0.12)}` },
 });

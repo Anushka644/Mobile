@@ -98,6 +98,7 @@ The designer's feedback on v2 was: "I love everything, but it's a bit boring." v
    - **Home:** the "Next to thaw" card is the reference (`src/screens/home/NextThawCard.tsx`): night card, a cold blue radial light behind a tinted tile rotated 6°, white serif-italic name, and a live hh:mm:ss countdown ticking every second.
    - **Night screens:** Item cooling and the Freezing moment are full night screens. Use a night background (`Screen background={colors.night900}` with glow 'none'), a cold blue radial light behind the hero tile, `<Grain opacity={0.7} />`, sparse slow white snow (SnowField), white and `night300` text, and glass icon buttons tinted for dark.
    - **Light screens:** Thawed decision, Let go, Saved and Buy are back in daylight (paper). Coming out of the freezer is the story.
+   - **Night kit:** `Button` variants `light` (white pill, ink text) and `ghostLight`; `IconButton variant="night"` (dark glass); `ReflectionCard tone="night"`; `ProgressBar style={{ backgroundColor: colors.night700 }}`; `SnowField` (white dots); `<Grain opacity={0.7} />`.
 3. **Expressive serif with italic accents.** `<Headline>` (`src/components/Headline.tsx`) sets words wrapped in `*asterisks*` in Instrument Serif Italic:
    - Examples: "Your *freezer*", "Still want *it?*", "Let it *go.*", "On *ice.*", "Every no is a *yes* to something".
    - Use one Headline per screen. Accents go on the emotional word.

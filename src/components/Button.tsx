@@ -6,7 +6,7 @@ import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
 import { PressableScale, type HapticKind } from './PressableScale';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ice' | 'mint' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ice' | 'mint' | 'ghost' | 'light' | 'ghostLight';
 /** md = 56 high (Label/L), sm = 46 (Label/M), xs = 36 compact pill (Label/S, padding 14). */
 export type ButtonSize = 'md' | 'sm' | 'xs';
 
@@ -38,6 +38,10 @@ const VARIANTS: Record<ButtonVariant, { bg: ColorValue | undefined; fg: ColorVal
   ice: { bg: colors.ice100, fg: colors.ice800, surface: {} },
   mint: { bg: colors.ice600, fg: colors.white, surface: shadow('button') },
   ghost: { bg: undefined, fg: colors.plum500, surface: {} },
+  /** On night surfaces: a white pill with ink text. */
+  light: { bg: colors.white, fg: colors.plum900, surface: {} },
+  /** On night surfaces: text only, soft white. */
+  ghostLight: { bg: undefined, fg: colors.night300, surface: {} },
 };
 
 const SIZES: Record<ButtonSize, { height: number; padding: number; icon: number; text: keyof typeof typography }> = {
@@ -48,7 +52,7 @@ const SIZES: Record<ButtonSize, { height: number; padding: number; icon: number;
 
 /**
  * Pill button (v2): Primary (ink), Secondary (white + hairline), Ice (frost), Mint (ice-blue accent),
- * Ghost (text). Press = spring.press; Ghost turns sunken while pressed; disabled = 40% opacity.
+ * Ghost (text); on night surfaces, Light (white pill) and GhostLight (soft white text). Press = spring.press; Ghost turns sunken while pressed; disabled = 40% opacity.
  */
 export function Button({
   label,
@@ -79,7 +83,7 @@ export function Button({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ busy: loading }}
       testID={testID}
-      pressedStyle={variant === 'ghost' ? styles.ghostPressed : undefined}
+      pressedStyle={variant === 'ghost' ? styles.ghostPressed : variant === 'ghostLight' ? styles.ghostLightPressed : undefined}
       style={[
         styles.base,
         { height: s.height, paddingHorizontal: s.padding, backgroundColor: v.bg },
@@ -114,4 +118,5 @@ const styles = StyleSheet.create({
   hug: { alignSelf: 'flex-start' },
   disabled: { opacity: 0.4 },
   ghostPressed: { backgroundColor: colors.bg.sunken },
+  ghostLightPressed: { backgroundColor: colors.night700 },
 });

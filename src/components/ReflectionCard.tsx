@@ -16,12 +16,23 @@ export interface ReflectionCardProps {
   onNext?: () => void;
   /** Eyebrow text (Caption). Default "While it melts". */
   eyebrow?: string;
+  /** 'night' for dark screens (white prompt, night hairline). Default 'day'. */
+  tone?: 'day' | 'night';
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
 
 /** Lavender reflection prompt card (spec §3 ReflectionCard). */
-export function ReflectionCard({ prompt, onNext, eyebrow = 'While it melts', style, testID }: ReflectionCardProps) {
+export function ReflectionCard({
+  prompt,
+  onNext,
+  eyebrow = 'While it melts',
+  tone = 'day',
+  style,
+  testID,
+}: ReflectionCardProps) {
+  const night = tone === 'night';
+  const ink = night ? colors.white : colors.text.primary;
   const fade = useSharedValue(1);
   useEffect(() => {
     fade.set(0);
@@ -33,14 +44,14 @@ export function ReflectionCard({ prompt, onNext, eyebrow = 'While it melts', sty
   }));
 
   return (
-    <View style={[styles.card, style]} testID={testID}>
+    <View style={[styles.card, night ? styles.cardNight : null, style]} testID={testID}>
       <View style={styles.eyebrow}>
-        <AppText variant="caption" color={colors.text.tertiary}>
+        <AppText variant="caption" color={night ? colors.night300 : colors.text.tertiary}>
           {eyebrow}
         </AppText>
       </View>
       <Animated.View style={promptStyle}>
-        <AppText variant="displayItalic" accessibilityLiveRegion="polite">
+        <AppText variant="displayItalic" color={ink} accessibilityLiveRegion="polite">
           {prompt}
         </AppText>
       </Animated.View>
@@ -55,10 +66,10 @@ export function ReflectionCard({ prompt, onNext, eyebrow = 'While it melts', sty
           hitSlop={10}
           style={styles.next}
         >
-          <AppText variant="labelS" color={colors.text.primary}>
+          <AppText variant="labelS" color={ink}>
             Another question
           </AppText>
-          <Icon name="refresh" size={14} color={colors.text.primary} />
+          <Icon name="refresh" size={14} color={ink} />
         </Pressable>
       ) : null}
     </View>
@@ -73,6 +84,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border.strong,
   },
+  cardNight: { borderColor: colors.night700 },
   eyebrow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   next: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
 });
