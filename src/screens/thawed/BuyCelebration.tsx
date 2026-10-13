@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
-import { AppText, Confetti, Headline, ItemCube, springCalm, timingFade, useReducedMotion } from '@/components';
+import { AppText, Confetti, Grain, Headline, ItemCube, springCalm, timingFade, useReducedMotion } from '@/components';
 import { colors } from '@/theme/tokens';
 import type { Item } from '@/types';
 
@@ -42,7 +42,9 @@ export function BuyCelebration({ visible, item, detail }: BuyCelebrationProps) {
   if (!visible) return null;
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]} accessibilityViewIsModal testID="buy-celebration">
-      <Animated.View style={[StyleSheet.absoluteFill, styles.veil, veilStyle]} />
+      <Animated.View style={[StyleSheet.absoluteFill, styles.veil, veilStyle]}>
+        <Grain />
+      </Animated.View>
       <Confetti trigger={visible ? 1 : 0} origin={{ x: 0.5, y: 0.4 }} />
       <View style={styles.center}>
         <Animated.View style={[styles.copy, copyStyle]} accessibilityRole="alert">
