@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Screenshot routes of the web build at iPhone 15/16 size (393 × 852 @2x) for visual QA.
 //
-//   node scripts/shoot.mjs [--out <dir>] [--no-build] [--full] [--port <n>] [--wait <ms>] <route> [<route> ...]
+//   node scripts/shoot.mjs [--out <dir>] [--dist <dir>] [--no-build] [--full] [--port <n>] [--wait <ms>] <route> [<route> ...]
 //   npm run shoot -- --out /tmp/chill-shots /dev/kit "/?seed=demo" /saved
 //
-// - Builds with `npx expo export --platform web` into dist/ (skip with --no-build to reuse dist/).
+// - Builds with `npx expo export --platform web` into dist/ or --dist <dir> (skip with --no-build to reuse it;
+//   give parallel runs their own --dist so they don't overwrite each other's build).
 // - Serves dist/ on a free port with an SPA fallback (unknown paths → index.html).
 // - Opens every route in ONE browser context, in order, so app state persists between routes
 //   (AsyncStorage → localStorage): `/?seed=demo` first, then `/saved`, `/insights`, …
@@ -21,7 +22,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DIST = path.join(ROOT, 'dist');
 const PLAYWRIGHT = '/opt/node22/lib/node_modules/playwright';
 const BROWSERS = '/opt/pw-browsers';
 
@@ -29,11 +29,12 @@ const BROWSERS = '/opt/pw-browsers';
 // CLI
 
 function parseArgs(argv) {
-  const opts = { out: '/tmp/chill-shots', build: true, full: false, port: 0, wait: 1200, routes: [] };
+  const opts = { out: '/tmp/chill-shots', dist: path.join(ROOT, 'dist'), build: true, full: false, port: 0, wait: 1200, routes: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--out') opts.out = argv[++i];
     else if (a === '--no-build') opts.build = false;
+    else if (a === '--dist') opts.dist = path.resolve(argv[++i]);
     else if (a === '--full') opts.full = true;
     else if (a === '--port') opts.port = Number(argv[++i]);
     else if (a === '--wait') opts.wait = Number(argv[++i]);
@@ -45,7 +46,7 @@ function parseArgs(argv) {
   return opts;
 }
 
-const USAGE = `Usage: node scripts/shoot.mjs [--out <dir>] [--no-build] [--full] [--port <n>] [--wait <ms>] <route>...
+const USAGE = `Usage: node scripts/shoot.mjs [--out <dir>] [--dist <dir>] [--no-build] [--full] [--port <n>] [--wait <ms>] <route>...
 Example: node scripts/shoot.mjs --out /tmp/chill-shots /dev/kit "/?seed=demo" /saved`;
 
 // ---------------------------------------------------------------------------
@@ -134,8 +135,8 @@ async function main() {
   }
 
   if (opts.build) {
-    console.log('› expo export --platform web → dist/');
-    const r = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', 'dist'], {
+    console.log(`› expo export --platform web → ${opts.dist}`);
+    const r = spawnSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', opts.dist], {
       cwd: ROOT,
       stdio: 'inherit',
       // EXPO_PUBLIC_QA=1: a QA export (all URL hooks + /dev/kit), see src/lib/testHooks.ts.
@@ -143,7 +144,8 @@ async function main() {
     });
     if (r.status !== 0) throw new Error(`expo export failed (exit ${r.status})`);
   }
-  if (!existsSync(path.join(DIST, 'index.html'))) throw new Error('dist/index.html missing — run without --no-build');
+  const DIST = opts.dist;
+  if (!existsSync(path.join(DIST, 'index.html'))) throw new Error(`${DIST}/index.html missing — run without --no-build`);
 
   process.env.PLAYWRIGHT_BROWSERS_PATH ??= BROWSERS;
   const require = createRequire(import.meta.url);

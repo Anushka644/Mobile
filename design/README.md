@@ -16,7 +16,18 @@
 | 06 Motion | Three keyframed scenes: **Freeze moment**, **The melt** and **Let it go**. Each one exports to MP4 from Figma (Export → Video). |
 | 07 Marketing | Five App Store screenshot layouts (645×1398, export at 2x). |
 
-## Art direction notes
+## v2: "Frost minimal" (current app)
+The app now uses a quieter, more editorial system defined in [`docs/DESIGN_SYSTEM_V2.md`](../docs/DESIGN_SYSTEM_V2.md). It replaces the clay look described below:
+- **Palette:** paper canvas, ink type and actions, and one ice-blue accent used only for time, frost and water.
+- **Type:** Instrument Serif for titles and big questions, Geist for the UI, and Geist Mono for captions.
+- **Surfaces:** flat with hairlines. No clay shadows and no coloured glows.
+- **Frost tile:** replaces the clay cube. Frost covers the share of the cooldown that is left and clears as the want melts.
+- **Savings glass:** water collects in it, replacing the coin jar. Let-go wants fall in as droplets.
+- **Screenshots:** `app-shots/` holds the real app in v2. `tools/appstore.py` composes the v2 App Store images into `marketing/`.
+
+The Figma file below still shows v1 (clay). Mirroring v2 in Figma needs the Figma connection re-authorised for the session.
+
+## Art direction notes (v1, clay)
 - **Soft squishy 3D (claymorphism).**
   - Palette: cream canvas, plum ink, coral / lavender / mint / butter accents, and an icy-blue ramp for frozen states.
   - Clay shadows are effect styles: `Clay/Raised`, `Clay/Soft`, `Clay/Button`, `Clay/Pressed`, `Ice/Glow`.
