@@ -4,8 +4,8 @@
 // open-link (hidden without a url). Hero: the frost tile (260), its frost line sinking as the want
 // melts. Countdown: mono "THAWS IN", the time left in Geist Light, a thin ice melt line as wide as
 // the tile and its two-ended readout. Then the name and price, the reflection, the details as
-// hairline key / value rows, and a ghost "Thaw it early" (with a confirm dialog) 24pt above the
-// bottom edge. When the item thaws while this screen is open, the tile clears in place and the
+// hairline key / value rows, and a quiet ghost "Thaw it early" (with a confirm dialog) at the end of
+// the page. When the item thaws while this screen is open, the tile clears in place and the
 // screen replaces itself with /thawed/[id].
 
 import { Redirect, useIsFocused, useRouter } from 'expo-router';
@@ -106,22 +106,7 @@ function ItemCooling({ item }: { item: Item }) {
     reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(20).stiffness(170);
 
   return (
-    <Screen
-      glow="item"
-      scroll
-      testID="item-cooling"
-      // Ghost "Thaw it early" rests 24pt above the bottom edge; longer content scrolls under a paper fade.
-      footerFade
-      footer={
-        <Button
-          label="Thaw it early"
-          variant="ghost"
-          disabled={thawed}
-          onPress={() => setConfirming(true)}
-          testID="item-thaw-early"
-        />
-      }
-    >
+    <Screen glow="item" scroll testID="item-cooling">
       <ItemNavBar
         title={frozenLabel(item, now)}
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
@@ -160,6 +145,16 @@ function ItemCooling({ item }: { item: Item }) {
         <ItemDetails item={item} />
       </Animated.View>
 
+      {/* Quiet, and at the end of the page: waiting is the whole trick. */}
+      <Button
+        label="Thaw it early"
+        variant="ghost"
+        disabled={thawed}
+        onPress={() => setConfirming(true)}
+        style={styles.thawEarly}
+        testID="item-thaw-early"
+      />
+
       <ConfirmDialog
         visible={confirming}
         icon="hourglass"
@@ -181,4 +176,5 @@ const styles = StyleSheet.create({
   title: { marginTop: 44 },
   reflection: { marginTop: 24 },
   details: { marginTop: 32 },
+  thawEarly: { marginTop: 20 },
 });

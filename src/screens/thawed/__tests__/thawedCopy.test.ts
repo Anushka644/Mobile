@@ -6,7 +6,9 @@ import {
   letGoLabel,
   moodLine,
   refreezeLabel,
+  thawedCaption,
   thawedQuestion,
+  thawedQuestionMarkup,
   urlHost,
 } from '../thawedCopy';
 
@@ -47,6 +49,12 @@ describe('thawedQuestion', () => {
     expect(thawedQuestion('Chunky sneakers')).toBe('Still want the chunky sneakers?');
     expect(thawedQuestion('')).toBe('Still want it?');
   });
+
+  it('marks the want for the serif italic', () => {
+    expect(thawedQuestionMarkup('Chunky sneakers')).toBe('Still want the *chunky sneakers?*');
+    expect(thawedQuestionMarkup('Nike *Dunk* Low')).toBe('Still want the *Nike Dunk Low?*');
+    expect(thawedQuestionMarkup('')).toBe('Still want *it?*');
+  });
 });
 
 describe('context card copy', () => {
@@ -58,6 +66,14 @@ describe('context card copy', () => {
       'Frozen 5 days ago'
     );
     expect(frozenAgo(base, base.frozenAt + 5 * HOUR)).toBe('Frozen 5 hours ago');
+  });
+
+  it('captions the wait, from the first freeze', () => {
+    expect(thawedCaption(base, base.frozenAt + 74 * HOUR)).toBe('Thawed · waited 3 days');
+    expect(thawedCaption({ frozenAt: at(9), firstFrozenAt: at(9) - 5 * 24 * HOUR }, at(9) + HOUR)).toBe(
+      'Thawed · waited 5 days'
+    );
+    expect(thawedCaption(base, base.frozenAt + 24 * HOUR)).toBe('Thawed · waited 1 day');
   });
 
   it('pairs the mood with the time-of-day phrase of the impulse', () => {

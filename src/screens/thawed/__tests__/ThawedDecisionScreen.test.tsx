@@ -53,11 +53,13 @@ afterEach(() => {
 describe('Thawed decision', () => {
   it('asks the question with context and the three choices', async () => {
     await open('/thawed/demo-lamp');
-    expect(screen.getByText('It’s thawed')).toBeTruthy();
+    expect(screen.getByText('Thawed · waited 3 days')).toBeTruthy();
     expect(screen.getByText('Still want the mushroom lamp?')).toBeTruthy();
-    expect(screen.getByText('Frozen 3 days ago')).toBeTruthy();
     expect(screen.getByText(/^Felt hyped · /)).toBeTruthy();
-    expect(screen.getByText('$65')).toBeTruthy();
+    // The one visible context line; screen readers also hear when it was frozen and the price.
+    expect(screen.getByTestId('thawed-context').props.accessibilityLabel).toMatch(
+      /^Frozen 3 days ago\. Felt hyped · [a-z -]+\. \$65\.$/
+    );
     expect(screen.getByText('Let it go · save $65')).toBeTruthy();
     expect(screen.getByText('Yes, I’ll buy it')).toBeTruthy();
     expect(screen.getByText('Refreeze for 3 more days')).toBeTruthy();
@@ -79,7 +81,8 @@ describe('Thawed decision', () => {
     await fireEvent.press(screen.getByTestId('thawed-buy'));
     expect(lamp()?.decision).toBe('bought');
     // The screen stays up (no redirect) while the celebration plays.
-    expect(screen.getByText('Enjoy it — you earned the certainty.')).toBeTruthy();
+    expect(screen.getByText('Enjoy it.')).toBeTruthy();
+    expect(screen.getByText('You earned the certainty.')).toBeTruthy();
     expect(screen.getByText('Opening etsy.com…')).toBeTruthy();
     expect(router.getPathname()).toBe('/thawed/demo-lamp');
     await advance(BUY_CELEBRATION_MS + 100);

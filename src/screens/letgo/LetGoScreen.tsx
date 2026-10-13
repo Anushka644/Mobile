@@ -20,11 +20,10 @@ import Animated, {
   FadeInDown,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 
-import { AppText, Button, ItemCube, Jar, jarLevel, Screen, timingFade, useReducedMotion } from '@/components';
+import { AppText, Button, Headline, ItemCube, Jar, jarLevel, Screen, timingFade, useReducedMotion } from '@/components';
 import { haptics } from '@/lib/haptics';
 import { formatMoney } from '@/lib/money';
 import { selectItem, selectLetGo, selectSavedCents } from '@/store/selectors';
@@ -34,13 +33,13 @@ import type { Goal, Item } from '@/types';
 
 import { goalPercentLabel, goalToGoCaption, meltedAwayCaption, savedSoFar } from '../saved/savedCopy';
 import { itemNoun } from '../thawed/thawedCopy';
-import { DropletFall, dropletTimeline, DROP_STAGGER_MS } from './DropletFall';
+import { DropletFall, dropletTimeline } from './DropletFall';
 import { LetGoTotal } from './LetGoTotal';
 import { useCountUp } from './useCountUp';
 
 /** Stage geometry, regular and compact (screens under 760pt). */
 const STAGE = {
-  regular: { tile: 104, gap: 44, glass: 188, drop: 16, drops: 7 },
+  regular: { tile: 104, gap: 36, glass: 180, drop: 16, drops: 7 },
   compact: { tile: 76, gap: 30, glass: 140, drop: 13, drops: 6 },
 } as const;
 const COMPACT_HEIGHT = 760;
@@ -145,7 +144,7 @@ function LetGoCelebration({ item }: { item: Item }) {
       give.set(withTiming(1, { duration: lastLand, easing: Easing.inOut(Easing.quad) }));
     }
     if (phase === 'rising') amountIn.set(withTiming(1, { duration: 260 }));
-  }, [phase, reduced, give, amountIn]);
+  }, [phase, reduced, give, amountIn, lastLand]);
 
   const tileStyle = useAnimatedStyle(() => {
     const v = give.get();
@@ -168,13 +167,8 @@ function LetGoCelebration({ item }: { item: Item }) {
   // --- geometry (stage px) -----------------------------------------------------------------------
   const [stageW, setStageW] = useState(353);
   const cx = stageW / 2;
-  /** The water surface in stage px at a level 0..1. */
-  const surfaceY = (level: number) => glassTop + (JAR_GLASS_TOP + JAR_GLASS_H * (1 - level * JAR_MAX_FILL)) * k;
-  // The water starts rising as the first drop lands; later drops meet it a little higher.
-  const landY = (i: number) => {
-    const t = Math.min(1, (i * DROP_STAGGER_MS) / (lastLand - firstLand || 1));
-    return surfaceY(n.prevLevel + (n.level - n.prevLevel) * t) + 2;
-  };
+  /** The water surface in stage px at a level 0..1 (just under it, so drops vanish into the water). */
+  const surfaceY = (level: number) => glassTop + (JAR_GLASS_TOP + JAR_GLASS_H * (1 - level * JAR_MAX_FILL)) * k + 2;
 
   const enter = (delay: number) =>
     reduced ? FadeIn.duration(220) : FadeInDown.delay(delay).springify().damping(20).stiffness(170);
@@ -199,9 +193,9 @@ function LetGoCelebration({ item }: { item: Item }) {
         <AppText variant="caption" color={colors.text.secondary} align="center" numberOfLines={2}>
           You let go of the {itemNoun(item.name)}
         </AppText>
-        <AppText variant="displayL" align="center" accessibilityRole="header">
-          Let go. Nice.
-        </AppText>
+        <Headline align="center" accessibilityRole="header">
+          {'Let go. *Nice.*'}
+        </Headline>
       </Animated.View>
 
       <Animated.View
@@ -217,9 +211,12 @@ function LetGoCelebration({ item }: { item: Item }) {
         {!reduced ? (
           <DropletFall
             start={phase !== 'intro'}
-            from={{ x: cx, y: g.tile - 6 }}
+            fromX={cx}
+            fromY={g.tile - 6}
             spread={g.tile * 0.2}
-            landY={landY}
+            // The water starts rising as the first drop lands, so later drops meet it higher.
+            landFirst={surfaceY(n.prevLevel)}
+            landLast={surfaceY(n.level)}
             count={g.drops}
             size={g.drop}
           />

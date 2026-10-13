@@ -17,7 +17,7 @@ export function goalPercentLabel(pct: number): string {
   return `${goalPercent(pct)}%`;
 }
 
-/** Count pill next to the jar: "8 wants let go" / "1 want let go". */
+/** Mono caption under the Saved total: "8 wants let go" / "1 want let go". */
 export function wantsLetGoLabel(count: number): string {
   return `${count} ${count === 1 ? 'want' : 'wants'} let go`;
 }

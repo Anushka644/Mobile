@@ -6,6 +6,7 @@ import {
   localDaysBetween,
   meltCaption,
   meltedPercent,
+  meltReadout,
   thawMoment,
 } from '../itemCopy';
 import { promptAt } from '../useReflectionPrompt';
@@ -50,6 +51,19 @@ describe('meltCaption', () => {
   it('switches to a ready line once thawed', () => {
     expect(meltCaption(1, NOW, NOW)).toBe('Fully melted · ready to decide');
     expect(meltCaption(0.4, NOW + DAY_MS, NOW, true)).toBe('Fully melted · ready to decide');
+  });
+});
+
+describe('meltReadout', () => {
+  it('reads the melt on the left and the thaw moment on the right', () => {
+    const thawAt = new Date(2025, 9, 16, 21, 41).getTime();
+    expect(meltReadout(0.58, thawAt, NOW)).toEqual(['58% melted', 'Thu 9:41 PM']);
+    expect(meltReadout(0.9999, NOW + HOUR_MS, NOW)).toEqual(['99% melted', 'today 10:41 AM']);
+  });
+
+  it('switches to a ready readout once thawed', () => {
+    expect(meltReadout(1, NOW, NOW)).toEqual(['Fully melted', 'Ready to decide']);
+    expect(meltReadout(0.4, NOW + DAY_MS, NOW, true)).toEqual(['Fully melted', 'Ready to decide']);
   });
 });
 

@@ -28,11 +28,14 @@ export interface DropletFallProps {
   /** Starts the fall (once). */
   start: boolean;
   /** The spout in container px: droplets slip out from under this point (e.g. the tile's bottom edge). */
-  from: { x: number; y: number };
-  /** Horizontal spread of the spout (± px around from.x). */
+  fromX: number;
+  fromY: number;
+  /** Horizontal spread of the spout (± px around fromX). */
   spread: number;
-  /** Where droplet `i` meets the water, in container px (the surface rises as they land). */
-  landY: (index: number) => number;
+  /** Where the first droplet meets the water, in container px. */
+  landFirst: number;
+  /** Where the last one does (the surface rises as they land); the others are spaced between. */
+  landLast: number;
   /** Droplets. Default 7. */
   count?: number;
   /** Droplet height. Default 16. */
@@ -48,9 +51,11 @@ export interface DropletFallProps {
  */
 export const DropletFall = memo(function DropletFall({
   start,
-  from,
+  fromX,
+  fromY,
   spread,
-  landY,
+  landFirst,
+  landLast,
   count = 7,
   size = 16,
 }: DropletFallProps) {
@@ -60,13 +65,13 @@ export const DropletFall = memo(function DropletFall({
         ? Array.from({ length: count }, (_, i) => {
             // Alternate sides of the spout so consecutive drops don't overlap, with jitter.
             const side = i % 2 === 0 ? -1 : 1;
-            const x = from.x + side * spread * (0.15 + 0.85 * rand(i + 1));
+            const x = fromX + side * spread * (0.15 + 0.85 * rand(i + 1));
             return (
               <Droplet
                 key={i}
                 x={x}
-                y0={from.y}
-                y1={landY(i)}
+                y0={fromY}
+                y1={landFirst + ((landLast - landFirst) * i) / Math.max(1, count - 1)}
                 size={size * (0.85 + 0.3 * rand(i + 11))}
                 delay={i * DROP_STAGGER_MS}
               />

@@ -2,59 +2,48 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppText, Icon, PressableScale, ProgressBar } from '@/components';
-import { colors, radius, shadow } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
 export interface GoalProgressCardProps {
-  /** Left of the top row: the goal name (Saved) or "$1,074 saved so far" (Let-go). */
+  /** Left of the top row: the goal name. */
   title: ReactNode;
-  /** Title/S for a goal name, Label/L for an amount line. Default 'titleS'. */
-  titleVariant?: 'titleS' | 'labelL';
+  /** Label/L (default) or Title/S. */
+  titleVariant?: 'labelL' | 'titleS';
   /** Right of the top row, e.g. "78%". */
   trailing?: string;
   /** Goal progress 0..1; null hides the bar. */
   progress: number | null;
   /** Animate the bar (and its first fill). Default true. */
   animated?: boolean;
-  /** Body/S secondary line under the bar. */
+  /** Body/S secondary line under the bar, e.g. "$934 of $1,200". */
   caption?: string;
-  /** Makes the card pressable (spring.press). */
+  /** Makes the row pressable (spring.press) and shows a chevron. */
   onPress?: () => void;
   accessibilityLabel?: string;
-  /**
-   * 'card' (default): a white card with a hairline (the Let-go screen).
-   * 'row': no surface, a plain row between two hairlines on the paper (the Saved tab).
-   */
-  variant?: 'card' | 'row';
-  /** Card depth: 'raised' (hairline + long faint drop) or 'soft' (hairline only). Default 'raised'. */
-  elevation?: 'raised' | 'soft';
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
 
 /**
- * Goal progress (v2): the goal name with its percent, a thin ink bar and a "$934 of $1,200"
- * caption. On Saved it is a quiet row between hairlines (with a chevron when it opens the goal
- * sheet); on Let-go it is a white card.
+ * The savings goal on Saved (v2): no card — a quiet row between two hairlines with the goal name
+ * and its percent, a thin ink bar, and "$934 of $1,200" with a chevron when it opens the goal sheet.
  */
 export function GoalProgressCard({
   title,
-  titleVariant = 'titleS',
+  titleVariant = 'labelL',
   trailing,
   progress,
   animated = true,
   caption,
   onPress,
   accessibilityLabel,
-  variant = 'card',
-  elevation = 'raised',
   style,
   testID,
 }: GoalProgressCardProps) {
-  const row = variant === 'row';
   const body = (
     <>
       <View style={styles.top}>
-        <AppText variant={titleVariant} numberOfLines={1} style={styles.title}>
+        <AppText variant={titleVariant} numberOfLines={1} style={styles.shrink}>
           {title}
         </AppText>
         {trailing ? (
@@ -64,30 +53,21 @@ export function GoalProgressCard({
         ) : null}
       </View>
       {progress != null ? (
-        <ProgressBar tone="mint" height={row ? 4 : 6} progress={progress} animated={animated} style={styles.bar} />
+        <ProgressBar tone="mint" height={4} progress={progress} animated={animated} style={styles.bar} />
       ) : null}
-      {caption || (row && onPress) ? (
+      {caption || onPress ? (
         <View style={styles.bottom}>
-          {caption ? (
-            <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1} style={styles.title}>
-              {caption}
-            </AppText>
-          ) : (
-            <View />
-          )}
-          {row && onPress ? <Icon name="chevron-right" size={16} color={colors.text.tertiary} /> : null}
+          <AppText variant="bodyS" color={colors.text.secondary} numberOfLines={1} style={styles.shrink}>
+            {caption ?? ''}
+          </AppText>
+          {onPress ? <Icon name="chevron-right" size={16} color={colors.text.tertiary} /> : null}
         </View>
       ) : null}
     </>
   );
-  const surface = [
-    row ? styles.row : styles.card,
-    row ? null : shadow(elevation === 'raised' ? 'raised' : 'soft'),
-    style,
-  ];
   if (!onPress) {
     return (
-      <View style={surface} accessible accessibilityLabel={accessibilityLabel} testID={testID}>
+      <View style={[styles.row, style]} accessible accessibilityLabel={accessibilityLabel} testID={testID}>
         {body}
       </View>
     );
@@ -96,7 +76,7 @@ export function GoalProgressCard({
     <PressableScale
       onPress={onPress}
       haptic="tap"
-      style={surface}
+      style={[styles.row, style]}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint="Edit your savings goal"
       testID={testID}
@@ -107,13 +87,6 @@ export function GoalProgressCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.bg.surface,
-  },
   row: {
     gap: 8,
     paddingVertical: 18,
@@ -123,6 +96,6 @@ const styles = StyleSheet.create({
   },
   top: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
   bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  title: { flexShrink: 1 },
+  shrink: { flexShrink: 1 },
   bar: { marginVertical: 4 },
 });

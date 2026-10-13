@@ -9,8 +9,6 @@ import { historyLine } from './savedCopy';
 
 export interface HistoryRowProps {
   item: Item;
-  /** Draw the hairline above the row. Default true (the list closes itself with a bottom hairline). */
-  divider?: boolean;
   testID?: string;
 }
 
@@ -23,13 +21,13 @@ const THUMB_RADIUS = 12;
  * "Let go Oct 11 · waited 3 days", and the amount: ink "+$95" for a let-go, a quiet "$49" for a buy
  * (never judged).
  */
-export function HistoryRow({ item, divider = true, testID }: HistoryRowProps) {
+export function HistoryRow({ item, testID }: HistoryRowProps) {
   const letGo = item.decision !== 'bought';
   const amount = formatMoney(item.priceCents, item.currency);
   const line = historyLine(item);
   return (
     <View
-      style={[styles.row, divider ? styles.divider : null]}
+      style={styles.row}
       accessible
       accessibilityLabel={`${item.name}. ${line}. ${letGo ? `Saved ${amount}` : amount}.`}
       testID={testID}
@@ -65,8 +63,10 @@ const styles = StyleSheet.create({
     gap: 14,
     minHeight: 72,
     paddingVertical: 14,
+    // Each row draws the hairline above it; the list draws the closing one.
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border.strong,
   },
-  divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border.strong },
   text: { flex: 1, gap: 3 },
   tile: { borderRadius: THUMB_RADIUS },
 });

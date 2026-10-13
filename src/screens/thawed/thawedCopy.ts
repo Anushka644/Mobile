@@ -35,6 +35,15 @@ export function thawedQuestion(name: string): string {
   return noun === 'it' ? 'Still want it?' : `Still want the ${noun}?`;
 }
 
+/**
+ * The headline as Headline markup, with the want itself in the serif italic:
+ * "Still want the *chunky sneakers?*" / "Still want *it?*". Asterisks in a name are dropped.
+ */
+export function thawedQuestionMarkup(name: string): string {
+  const noun = itemNoun(name.replace(/\*/g, ''));
+  return noun === 'it' ? 'Still want *it?*' : `Still want the *${noun}?*`;
+}
+
 /** Mood line opener, e.g. "Felt hyped" (spec §4.5 context card). */
 export const MOOD_FELT: Record<Mood, string> = {
   bored: 'Felt bored',

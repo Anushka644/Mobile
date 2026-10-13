@@ -1,7 +1,7 @@
 // Thawed decision (spec §4.5, restyled per docs/DESIGN_SYSTEM_V2.md "Thawed decision").
 //
 // Plain paper. A close button top right; the clear tile (240); the mono caption "THAWED · WAITED
-// 3 DAYS"; the serif question "Still want the chunky sneakers?"; one line of context (what you felt
+// 3 DAYS"; the serif question "Still want the *chunky sneakers?*" (the want in italic); one line of context (what you felt
 // when you froze it); and the three calm choices stacked 24pt above the bottom edge:
 //   Ink "Let it go · save $140"       → decide let-go → /let-go/[id] (replace)
 //   White "Yes, I'll buy it"           → decide bought → confetti + "Enjoy it." → open the url → home
@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Linking, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { AppText, Button, IconButton, ItemCube, Screen, useReducedMotion } from '@/components';
+import { AppText, Button, Headline, IconButton, ItemCube, Screen, useReducedMotion } from '@/components';
 import { now as clockNow, useNow } from '@/lib/clock';
 import { haptics } from '@/lib/haptics';
 import { openableUrl } from '@/lib/url';
@@ -25,7 +25,7 @@ import type { Item } from '@/types';
 
 import { BuyCelebration } from './BuyCelebration';
 import { ContextCard } from './ContextCard';
-import { letGoLabel, refreezeLabel, thawedCaption, thawedQuestion, urlHost } from './thawedCopy';
+import { letGoLabel, refreezeLabel, thawedCaption, thawedQuestionMarkup, urlHost } from './thawedCopy';
 import { clearThawReminder, rescheduleThawReminder } from './thawReminder';
 
 /** How long the "Enjoy it" moment plays before heading home (reduced motion: shorter). */
@@ -135,6 +135,8 @@ function ThawedDecision({
           <IconButton icon="close" accessibilityLabel="Close" onPress={close} disabled={busy} />
         </View>
 
+        {/* The tile and the question sit a little above the middle of the space over the choices. */}
+        <View style={styles.spaceAbove} />
         <Animated.View entering={reduced ? FadeIn.duration(220) : FadeIn.duration(360)} style={styles.hero}>
           <ItemCube item={item} progress={1} thawed size={tile} radius={Math.round(tile * TILE_RADIUS_RATIO)} />
         </Animated.View>
@@ -143,12 +145,13 @@ function ThawedDecision({
           <AppText variant="caption" color={colors.text.secondary} align="center">
             {thawedCaption(item, now)}
           </AppText>
-          <AppText variant="displayL" align="center" accessibilityRole="header" style={styles.question}>
-            {thawedQuestion(item.name)}
-          </AppText>
+          <Headline align="center" accessibilityRole="header" style={styles.question}>
+            {thawedQuestionMarkup(item.name)}
+          </Headline>
           <ContextCard item={item} now={now} />
         </Animated.View>
 
+        <View style={styles.spaceBelow} />
         <Animated.View entering={enter(140)} style={styles.actions}>
           <Button
             label={letGoLabel(item)}
@@ -190,12 +193,14 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { alignItems: 'stretch' },
   nav: { height: 44, flexDirection: 'row', justifyContent: 'flex-end' },
-  hero: { alignItems: 'center', marginTop: 8 },
+  spaceAbove: { flexGrow: 1, minHeight: 4 },
+  hero: { alignItems: 'center' },
   headline: { marginTop: 32, alignItems: 'center', gap: 12 },
   headlineCompact: { marginTop: 20, gap: 8 },
   question: { paddingHorizontal: 8 },
-  // Bottom-anchored: the spacer above grows, so the choices sit 24pt above the screen bottom (Screen's
+  // Bottom-anchored: the spacers grow (1 : 2), so the choices sit 24pt above the screen bottom (Screen's
   // default bottom padding) and the whole column scrolls on short screens.
-  actions: { marginTop: 'auto', paddingTop: 32, gap: 10 },
+  spaceBelow: { flexGrow: 2, minHeight: 32 },
+  actions: { gap: 10 },
   footnote: { marginTop: 2 },
 });

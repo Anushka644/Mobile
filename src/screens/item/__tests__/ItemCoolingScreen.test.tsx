@@ -56,11 +56,14 @@ describe('Item — cooling', () => {
     await open('/item/demo-sneakers');
     expect(screen.getByText('Frozen 2 days ago')).toBeTruthy();
     expect(screen.getByTestId('item-countdown')).toHaveTextContent(/^1[12]h \d+m$/);
-    expect(screen.getByText(/^83% melted · thaws /i)).toBeTruthy();
+    expect(screen.getByText('Thaws in')).toBeTruthy();
+    expect(screen.getByText('83% melted')).toBeTruthy();
+    expect(screen.getByText(/^(today|tomorrow) \d{1,2}:\d\d [AP]M$/)).toBeTruthy();
     expect(screen.getByText('Chunky sneakers')).toBeTruthy();
     expect(screen.getByText('$140')).toBeTruthy();
     expect(screen.getByText('Felt hyped')).toBeTruthy();
     expect(screen.getByText('Fashion')).toBeTruthy();
+    expect(screen.getByText('3 days')).toBeTruthy();
     expect(screen.getByText('Saw them in a 1am haul video.')).toBeTruthy();
     expect(screen.getByText('While it melts')).toBeTruthy();
     // The demo item has no url: no open-link button.

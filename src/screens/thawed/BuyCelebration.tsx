@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
-import { AppText, Confetti, ItemCube, springCalm, timingFade, useReducedMotion } from '@/components';
-import { colors, withAlpha } from '@/theme/tokens';
+import { AppText, Confetti, Headline, ItemCube, springCalm, timingFade, useReducedMotion } from '@/components';
+import { colors } from '@/theme/tokens';
 import type { Item } from '@/types';
 
 export interface BuyCelebrationProps {
@@ -18,7 +18,7 @@ export interface BuyCelebrationProps {
 const TILE = 96;
 
 /**
- * "Yes, I'll buy it" moment (v2): the decision fades under a paper veil, a calm ink / ice confetti
+ * "Yes, I'll buy it" moment (v2): the decision fades away under the paper, a calm ink / ice confetti
  * burst, the clear tile, a serif "Enjoy it." and a no-guilt line, then a mono status line while
  * the shop opens. No card, no badge. Reduced motion: a plain fade.
  */
@@ -49,9 +49,9 @@ export function BuyCelebration({ visible, item, detail }: BuyCelebrationProps) {
           {item ? (
             <ItemCube item={item} progress={1} thawed size={TILE} radius={Math.round(TILE * 0.16)} animated={false} />
           ) : null}
-          <AppText variant="displayXL" align="center" style={styles.title}>
-            Enjoy it.
-          </AppText>
+          <Headline variant="displayXL" align="center" style={styles.title}>
+            {'Enjoy *it.*'}
+          </Headline>
           <AppText variant="bodyL" color={colors.text.secondary} align="center">
             You earned the certainty.
           </AppText>
@@ -68,7 +68,7 @@ export function BuyCelebration({ visible, item, detail }: BuyCelebrationProps) {
 
 const styles = StyleSheet.create({
   root: { zIndex: 10 },
-  veil: { backgroundColor: withAlpha(colors.cream100, 0.96) },
+  veil: { backgroundColor: colors.bg.canvas },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   copy: { alignItems: 'center', maxWidth: 320 },
   title: { marginTop: 28, marginBottom: 8 },

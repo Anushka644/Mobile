@@ -48,7 +48,6 @@ export function CountdownHero({
         align="center"
         numberOfLines={1}
         adjustsFontSizeToFit
-        tabular
         accessibilityRole="timer"
         accessibilityLabel={countdownA11y(timeLeft)}
         testID="item-countdown"

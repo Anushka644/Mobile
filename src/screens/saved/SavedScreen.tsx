@@ -56,9 +56,7 @@ export function SavedScreen() {
         <Animated.View entering={rise(0)}>
           {goal && settings.goal ? (
             <GoalProgressCard
-              variant="row"
               title={settings.goal.name}
-              titleVariant="labelL"
               trailing={goalPercentLabel(goal.pct)}
               progress={goal.pct / 100}
               caption={goalAmountCaption(goal.saved, goal.target, currency)}

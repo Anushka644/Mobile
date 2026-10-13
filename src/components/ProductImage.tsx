@@ -107,7 +107,15 @@ export interface ProductThumbProps {
 /** Small square thumbnail for lists (Saved "Melted away" rows): picture on a soft tile, or the category tile. */
 export function ProductThumb({ item, size = 48, background, style }: ProductThumbProps) {
   const { source, onError } = useImageFallback(productImageFor(item));
-  if (!source) return <ProductTile category={item.category} glyph={glyphForItem(item)} size={size} style={style} />;
+  if (!source)
+    return (
+      <ProductTile
+        category={item.category}
+        glyph={glyphForItem(item)}
+        size={size}
+        style={[{ backgroundColor: background ?? tintFor(item).bg }, style]}
+      />
+    );
   // A user photo fills the thumb; a bundled render sits inside it (on web both are objects).
   const isPhoto = !!item.imageUri;
   return (
