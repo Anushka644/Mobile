@@ -86,6 +86,25 @@ Rules:
 | Freezing moment | Preset `frozen`. The frost rises over the product (the reverse of melting) with a glint, then a serif "On ice." and a quiet line saying when it thaws. Ink button. |
 | Onboarding (3) | One serif headline per slide, a short body, and one illustration each: (1) a tile freezing over a product, (2) the frost line sinking as it melts, (3) the glass filling with droplets. Pager dots are thin ink dashes. Ink CTA. |
 
+## v2.1: signature moments (keep it minimal, never boring)
+
+The designer's feedback on v2 was: "I love everything, but it's a bit boring." v2.1 keeps the system and adds a few strong, on-concept ideas. Use them deliberately: one or two per screen, never all at once.
+
+1. **Product tints.** Every want's frost tile is tinted by its product: coral sneakers, butter air fryer, lavender headphones, mint jacket. The freezer becomes a gallery of frosted coloured glass.
+   - `ItemCube` and `ProductThumb` do this automatically via `tintFor(item)` (`src/components/tints.ts`, tokens `tints.*`).
+   - Use `tintFor(item).bg/.deep` for any other item-coloured surface, such as a soft wash behind a hero tile.
+2. **Inside the freezer is night.** Dark is reserved for being frozen:
+   - **Tokens:** `night900` (bg), `night800`, `night700` (tracks, hairlines), `night500`, `night300` (secondary text).
+   - **Home:** the "Next to thaw" card is the reference (`src/screens/home/NextThawCard.tsx`): night card, a cold blue radial light behind a tinted tile rotated 6°, white serif-italic name, and a live hh:mm:ss countdown ticking every second.
+   - **Night screens:** Item cooling and the Freezing moment are full night screens. Use a night background (`Screen background={colors.night900}` with glow 'none'), a cold blue radial light behind the hero tile, `<Grain opacity={0.7} />`, sparse slow white snow (SnowField), white and `night300` text, and glass icon buttons tinted for dark.
+   - **Light screens:** Thawed decision, Let go, Saved and Buy are back in daylight (paper). Coming out of the freezer is the story.
+3. **Expressive serif with italic accents.** `<Headline>` (`src/components/Headline.tsx`) sets words wrapped in `*asterisks*` in Instrument Serif Italic:
+   - Examples: "Your *freezer*", "Still want *it?*", "Let it *go.*", "On *ice.*", "Every no is a *yes* to something".
+   - Use one Headline per screen. Accents go on the emotional word.
+   - Insights should read as sentences: "You want things most on *Saturday nights*", with the numbers carrying the drama.
+4. **Tactility.** `Screen` lays a barely-there paper grain over every canvas (`grain` prop, on by default). Dark surfaces add `<Grain opacity={0.7} />`. The savings glass has bubbles and a travelling wave, and the frost tile has a glint.
+5. **Play in the hero.** Hero moments may rotate a tile a few degrees and give it a coloured glow shadow (its tint, or ice on night), and may use oversized numbers (Geist Light, tight tracking). Lists and forms stay calm and straight.
+
 ## Verifying
 
 - **Screenshots:**

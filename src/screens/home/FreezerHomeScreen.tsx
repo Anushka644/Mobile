@@ -25,6 +25,7 @@ import Animated, {
 import {
   AppText,
   Button,
+  Headline,
   IconButton,
   ItemCard,
   ReadyBanner,
@@ -40,6 +41,7 @@ import { colors } from '@/theme/tokens';
 import type { Item } from '@/types';
 
 import { EmptyFreezer } from './EmptyFreezer';
+import { NextThawCard } from './NextThawCard';
 import { freezerSubtitle, GRID_GAP, gridCardWidth, MAX_READY, useFreezerNow } from './homeLayout';
 import { useThawArrivals } from './useThawArrivals';
 
@@ -90,6 +92,7 @@ export function FreezerHomeScreen() {
   const hiddenReady = readyList.length - readyVisible.length;
   const empty = grid.length === 0 && readyList.length === 0;
   const cardWidth = gridCardWidth(width);
+  const nextThaw = [...cooling].sort(byThawAt)[0];
   const bottomPadding = empty ? centeredPadding : scrollPadding;
 
   return (
@@ -100,9 +103,9 @@ export function FreezerHomeScreen() {
             <AppText variant="caption" color={colors.text.secondary}>
               {formatDayCaption(now)}
             </AppText>
-            <AppText variant="displayL" accessibilityRole="header" style={styles.title}>
-              Your freezer
-            </AppText>
+            <Headline accessibilityRole="header" style={styles.title}>
+              {'Your *freezer*'}
+            </Headline>
             <AppText variant="bodyM" color={colors.text.secondary}>
               {freezerSubtitle(cooling.length, ready.length, items.length > 0)}
             </AppText>
@@ -115,6 +118,12 @@ export function FreezerHomeScreen() {
             style={styles.bell}
           />
         </View>
+
+        {nextThaw ? (
+          <Animated.View key={`next-${nextThaw.id}`} layout={MOVE} entering={SAVED_ENTER} exiting={SECTION_EXIT}>
+            <NextThawCard item={nextThaw} />
+          </Animated.View>
+        ) : null}
 
         {saved > 0 ? (
           <Animated.View layout={MOVE} entering={SAVED_ENTER}>

@@ -11,7 +11,7 @@
 
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useId } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -23,6 +23,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 
 import { meltProgress } from '@/lib/melt';
 import { colors, withAlpha } from '@/theme/tokens';
@@ -32,6 +33,7 @@ import { CATEGORY_ICONS, glyphForItem } from './glyphs';
 import { Icon, type IconName } from './Icon';
 import { timingMelt, useReducedMotion } from './motion';
 import { productImageFor, toImageSource, useImageFallback, type ProductImageSource } from './ProductImage';
+import { tintFor } from './tints';
 
 export interface CubeProps {
   /** Melt progress 0..1 (continuous; use meltProgress(item, now)). */
@@ -55,6 +57,8 @@ export interface CubeProps {
    * Default: true for a uri string. (On web a bundled asset is an object too, so it can't be inferred.)
    */
   photo?: boolean;
+  /** Glass colour (v2.1 product tint): `bg` top-left, `deep` bottom-right. Default: plain frost. */
+  tint?: { bg: string; deep: string };
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
   testID?: string;
@@ -78,10 +82,12 @@ export const Cube = memo(function Cube({
   animated = true,
   radius,
   photo,
+  tint,
   style,
   accessibilityLabel,
   testID,
 }: CubeProps) {
+  const shadowId = `tileShadow${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const target = clamp01(progress);
   const isThawed = thawed || target >= 1;
   const reduced = useReducedMotion();
@@ -124,6 +130,27 @@ export const Cube = memo(function Cube({
     transform: [{ translateX: -size * 0.9 + glint.get() * size * 2.2 }, { rotate: '20deg' }],
   }));
 
+  const glass: [string, string] = tint ? [tint.bg, tint.deep] : [colors.ice50, colors.ice100];
+  const shadowW = size * 0.5;
+  const shadowH = size * 0.09;
+  // A soft contact shadow under a product render (not under photos or glyphs).
+  const contact =
+    source && !isPhoto ? (
+      <Svg
+        width={shadowW}
+        height={shadowH}
+        style={[styles.contact, { left: (size - shadowW) / 2, top: size * (0.5 + PRODUCT_SHARE * 0.44) - shadowH / 2 }]}
+      >
+        <Defs>
+          <RadialGradient id={shadowId} cx="50%" cy="50%" rx="50%" ry="50%">
+            <Stop offset="0" stopColor={colors.plum900} stopOpacity={0.16} />
+            <Stop offset="1" stopColor={colors.plum900} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Ellipse cx={shadowW / 2} cy={shadowH / 2} rx={shadowW / 2} ry={shadowH / 2} fill={`url(#${shadowId})`} />
+      </Svg>
+    ) : null;
+
   const product = (blurred: boolean) =>
     source ? (
       <Image
@@ -153,16 +180,14 @@ export const Cube = memo(function Cube({
       accessibilityLabel={accessibilityLabel ?? (isThawed ? 'Thawed' : `${Math.round(target * 100)}% melted`)}
       testID={testID}
     >
-      <LinearGradient
-        colors={isThawed ? [colors.white, colors.ice50] : [colors.ice50, colors.ice100]}
-        style={StyleSheet.absoluteFill}
-      />
+      <LinearGradient colors={glass} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      {contact}
       <View style={[StyleSheet.absoluteFill, styles.center]}>{product(false)}</View>
 
       {/* Frost: anchored to the bottom, its height is the share of the cooldown still left. */}
       <Animated.View style={[styles.frost, frostStyle]}>
         <View style={[styles.frostContent, { width: size, height: size }]}>
-          <LinearGradient colors={[colors.ice50, colors.ice100]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={glass} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
           <View style={[StyleSheet.absoluteFill, styles.center]}>{product(true)}</View>
           <View style={[StyleSheet.absoluteFill, styles.frostTint]} />
         </View>
@@ -208,6 +233,7 @@ export function ItemCube({ item, now, progress, thawed, ...rest }: ItemCubeProps
       thawed={t}
       image={productImageFor(item)}
       photo={!!item.imageUri}
+      tint={tintFor(item)}
       category={item.category}
       glyph={glyphForItem(item)}
       accessibilityLabel={`${item.name}, ${t ? 'thawed' : `${Math.round(p * 100)}% melted`}`}
@@ -225,7 +251,8 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   frost: { position: 'absolute', left: 0, right: 0, bottom: 0, overflow: 'hidden' },
   frostContent: { position: 'absolute', left: 0, bottom: 0 },
-  frostTint: { backgroundColor: withAlpha(colors.ice50, 0.62) },
+  frostTint: { backgroundColor: withAlpha(colors.white, 0.5) },
+  contact: { position: 'absolute' },
   glint: { position: 'absolute', left: 0, pointerEvents: 'none' },
   edge: {
     position: 'absolute',

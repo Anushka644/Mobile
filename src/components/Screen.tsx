@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, withAlpha } from '@/theme/tokens';
 
 import { GlowBackground, type GlowBackgroundProps, type GlowPreset } from './Glow';
+import { Grain } from './Grain';
 import { FRAME_WIDTH, GUTTER, topInset, useBottomGap } from './layout';
 
 export interface ScreenProps {
@@ -44,6 +45,8 @@ export interface ScreenProps {
   style?: StyleProp<ViewStyle>;
   /** Canvas color under the glows. Default bg.canvas. */
   background?: ColorValue;
+  /** Paper grain over the canvas (v2.1). Default true. */
+  grain?: boolean;
   /** Ref to the ScrollView (scroll screens). */
   scrollRef?: Ref<ScrollView>;
   /** Extra ScrollView props (scroll screens). */
@@ -69,6 +72,7 @@ export function Screen({
   contentStyle,
   style,
   background = colors.bg.canvas,
+  grain = true,
   scrollRef,
   scrollProps,
   testID,
@@ -79,6 +83,8 @@ export function Screen({
   const onFooterLayout = (e: LayoutChangeEvent) => setFooterHeight(Math.ceil(e.nativeEvent.layout.height));
 
   const padBottom = (bottomPadding ?? gap) + (footer ? footerHeight + gap : 0);
+  // The footer fade dissolves into the canvas colour (a hex token; anything else fades to paper).
+  const fadeBase = typeof background === 'string' && background.startsWith('#') ? background : colors.cream100;
   const column: StyleProp<ViewStyle> = [
     styles.column,
     { paddingTop: safeTop ? topInset(insets.top) : 0, paddingHorizontal: gutter, paddingBottom: padBottom },
@@ -88,6 +94,7 @@ export function Screen({
   return (
     <View style={[styles.root, { backgroundColor: background }, style]} testID={testID}>
       <GlowBackground preset={glow} background={background} {...glowProps} />
+      {grain ? <Grain /> : null}
       {scroll ? (
         <ScrollView
           ref={scrollRef}
@@ -106,7 +113,7 @@ export function Screen({
         <View style={[styles.footerWrap, { paddingBottom: gap }]}>
           {footerFade ? (
             <LinearGradient
-              colors={[withAlpha(colors.cream100, 0), withAlpha(colors.cream100, 0.94), colors.cream100]}
+              colors={[withAlpha(fadeBase, 0), withAlpha(fadeBase, 0.94), fadeBase]}
               locations={[0, 0.35, 1]}
               style={styles.footerFade}
             />

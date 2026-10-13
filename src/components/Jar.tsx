@@ -14,6 +14,7 @@ import Animated, {
   withDelay,
   withRepeat,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
@@ -152,6 +153,13 @@ export const Jar = memo(function Jar({
           <LinearGradient colors={[colors.ice400, colors.ice600]} style={StyleSheet.absoluteFill} />
         </Animated.View>
 
+        {/* A few bubbles drift up through the water. */}
+        {motion
+          ? BUBBLES.map((b, i) => (
+              <Bubble key={i} index={i} x={b.x * gw} size={b.size * k} delay={b.delay} fill={fill} gh={gh} />
+            ))
+          : null}
+
         {/* Measuring ticks on the right, a long reflection on the left. */}
         {ticks.map((t) => (
           <View
@@ -174,7 +182,58 @@ export const Jar = memo(function Jar({
   );
 });
 
+/** Bubble lanes: x as a share of the glass width, size in design px, start delay in ms. */
+const BUBBLES = [
+  { x: 0.28, size: 6, delay: 0 },
+  { x: 0.62, size: 4, delay: 1400 },
+  { x: 0.46, size: 5, delay: 2600 },
+  { x: 0.74, size: 3.5, delay: 3700 },
+] as const;
+
+/** One bubble rising from the bottom to the water line on a slow loop. */
+function Bubble({
+  index,
+  x,
+  size,
+  delay,
+  fill,
+  gh,
+}: {
+  index: number;
+  x: number;
+  size: number;
+  delay: number;
+  fill: SharedValue<number>;
+  gh: number;
+}) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.set(withDelay(delay, withRepeat(withTiming(1, { duration: 4200 + index * 500, easing: Easing.in(Easing.quad) }), -1)));
+    return () => cancelAnimation(t);
+  }, [t, delay, index]);
+  const style = useAnimatedStyle(() => {
+    const top = fill.get() * MAX_FILL * gh;
+    const rise = t.get() * Math.max(0, top - size * 2);
+    return {
+      opacity: top > size * 4 ? (1 - t.get()) * 0.9 : 0,
+      transform: [{ translateY: -rise }, { translateX: Math.sin(t.get() * Math.PI * 3 + index) * 3 }],
+    };
+  });
+  return (
+    <Animated.View
+      style={[styles.bubble, { left: x, bottom: 6, width: size, height: size, borderRadius: size / 2 }, style]}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
+  bubble: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: withAlpha(colors.white, 0.85),
+    backgroundColor: withAlpha(colors.white, 0.25),
+    pointerEvents: 'none',
+  },
   glass: {
     position: 'absolute',
     overflow: 'hidden',

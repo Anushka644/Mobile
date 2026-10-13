@@ -25,6 +25,8 @@ export {
   type TopGlowProps,
 } from './Glow';
 export { CATEGORY_ACCENT, CATEGORY_ICONS, glyphForItem, MOOD_ICONS, MOOD_INK, MOOD_TINT } from './glyphs';
+export { Grain, type GrainProps } from './Grain';
+export { Headline, headlineRuns, type HeadlineProps } from './Headline';
 export { Icon, ICON_NAMES, type IconName, type IconProps } from './Icon';
 export { IconBadge, type IconBadgeProps } from './IconBadge';
 export { IconButton, type IconButtonProps, type IconButtonVariant } from './IconButton';
@@ -85,6 +87,7 @@ export {
 } from './Sheet';
 export { SnowField, type SnowFieldProps } from './SnowField';
 export { TAB_META, TabBar, type TabBarProps } from './TabBar';
+export { CATEGORY_TINTS, tintFor, tintNameFor } from './tints';
 export { TextField, type TextFieldProps } from './TextField';
 export { Toggle, type ToggleProps } from './Toggle';
 export { ariaState, type AriaStateProps } from './a11y';

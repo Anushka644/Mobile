@@ -52,7 +52,30 @@ export const palette = {
   ice800: '#1A4F9E',
 
   white: '#FFFFFF',
+
+  /** Night: the inside of the freezer (item cooling, hero cards). */
+  night900: '#0C0F14',
+  night800: '#141922',
+  night700: '#1E2530',
+  night500: '#5B6676',
+  night300: '#9AA6B6',
 } as const;
+
+/**
+ * Product tints (v2.1): each want's frost tile is tinted by its product, so the freezer reads as a
+ * gallery of frosted coloured glass. `bg` is the glass, `deep` its lower edge.
+ */
+export const tints = {
+  coral: { bg: '#FFE9E1', deep: '#FFD3C3' },
+  butter: { bg: '#FFF3D3', deep: '#FFE19B' },
+  lavender: { bg: '#EEEAFF', deep: '#DAD3FF' },
+  mint: { bg: '#E0F6EC', deep: '#BFEBD8' },
+  sky: { bg: '#E5F0FC', deep: '#C9DFF7' },
+  rose: { bg: '#FCE8EF', deep: '#F6CFDD' },
+  sand: { bg: '#F3EEE6', deep: '#E4DACB' },
+} as const;
+
+export type TintName = keyof typeof tints;
 
 export const semantic = {
   bg: {
@@ -313,6 +336,7 @@ export const withAlpha = rgba;
 
 export const theme = {
   colors,
+  tints,
   palette,
   semantic,
   space,

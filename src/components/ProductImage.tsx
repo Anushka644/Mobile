@@ -9,6 +9,7 @@ import type { Category, Item } from '@/types';
 
 import { CATEGORY_ACCENT, CATEGORY_ICONS, glyphForItem } from './glyphs';
 import { Icon, type IconName } from './Icon';
+import { tintFor } from './tints';
 
 /** A bundled asset (`require(...)` module id) or a remote / file uri. */
 export type ProductImageSource = number | { uri: string };
@@ -98,13 +99,13 @@ export interface ProductThumbProps {
   item: Pick<Item, 'id' | 'name' | 'imageUri' | 'category'>;
   /** Default 48. */
   size?: number;
-  /** Background behind a picture. Default ice50 (the frost tile's clear glass). */
+  /** Background behind a picture. Default: the item's product tint (v2.1). */
   background?: string;
   style?: StyleProp<ViewStyle>;
 }
 
 /** Small square thumbnail for lists (Saved "Melted away" rows): picture on a soft tile, or the category tile. */
-export function ProductThumb({ item, size = 48, background = colors.ice50, style }: ProductThumbProps) {
+export function ProductThumb({ item, size = 48, background, style }: ProductThumbProps) {
   const { source, onError } = useImageFallback(productImageFor(item));
   if (!source) return <ProductTile category={item.category} glyph={glyphForItem(item)} size={size} style={style} />;
   // A user photo fills the thumb; a bundled render sits inside it (on web both are objects).
@@ -116,7 +117,7 @@ export function ProductThumb({ item, size = 48, background = colors.ice50, style
           width: size,
           height: size,
           borderRadius: Math.min(radii.md, Math.round(size * 0.26)),
-          backgroundColor: background,
+          backgroundColor: background ?? tintFor(item).bg,
           overflow: 'hidden',
         },
         styles.center,
